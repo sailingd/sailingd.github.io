@@ -10,6 +10,12 @@
     overflow: hidden;
     background-color: black;
     font-family: 'Inter', sans-serif; /* Using Inter font */
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Safari */
+    -khtml-user-select: none;    /* Konqueror HTML */
+    -moz-user-select: none;      /* Old versions of Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
   }
   #spaceCanvas {
     display: block;
@@ -3513,12 +3519,12 @@
         speakRoboticText(message, 50); // Play robotic voice for the message, faster (50ms per char)
 
         setTimeout(() => {
-          this.messageGroup.style.opacity = 0; // Fade out after 1 second
+          this.messageGroup.style.opacity = 0; // Fade out after 0.5 seconds
           setTimeout(() => {
               this.messageGroup.style.display = 'none'; // Hide after fade
               if (callback) callback(); // Signal completion
           }, parseFloat(settings.ufoMessageTransition) * 1000); // Wait for transition to complete
-        }, 1000); // Reduced from 2000ms to 1000ms
+        }, 500); // Reduced from 1000ms to 500ms
       }
     }
 
