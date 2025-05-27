@@ -13,10 +13,14 @@
   }
   #spaceCanvas {
     display: block;
+    position: absolute; /* Needed for z-index to work */
+    top: 0;
+    left: 0;
     width: 100%; /* Ensure SVG takes full width */
     height: 100%; /* Ensure SVG takes full height */
     background-color: black; /* Pure black space background */
     border-radius: 10px; /* Rounded corners for the canvas area */
+    z-index: 1; /* Place above stars (z-index: 0) */
   }
   #stats {
     position: absolute;
@@ -65,16 +69,35 @@
     z-index: 50; /* Lasers should be above stars/background */
   }
   /* Removed .explosion-particle CSS as particles are now SVG elements */
-  .star {
+  #controls {
     position: absolute;
-    border-radius: 50%; /* Make them circular */
-    pointer-events: none; /* Allow clicks to pass through */
-    opacity: 1;
+    bottom: 16px; /* 4 units from bottom */
+    left: 16px;  /* 4 units from left */
+    z-index: 9999; /* Very high z-index to ensure visibility */
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent dark background */
+    padding: 10px;
+    border-radius: 10px;
+    display: flex; /* From Tailwind */
+    gap: 8px; /* space-x-2 in Tailwind */
+    align-items: center; /* To vertically align buttons */
+  }
+  #controls button {
+    /* Basic button styling to ensure they are visible */
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+    background-color: rgba(50, 50, 50, 0.7);
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+  #controls button:hover {
+    background-color: rgba(70, 70, 70, 0.9);
+    border-color: rgba(255, 255, 255, 0.5);
   }
 </style>
 </head>
 <body>
-  <div id="starsContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 0;"></div>
   <svg id="spaceCanvas" width="100%" height="100%">
     <defs>
       <linearGradient id="userLaserGradient" x1="0%" y1="50%" x2="100%" y2="50%">
@@ -82,23 +105,19 @@
         <stop offset="70%" stop-color="rgba(100, 255, 100, 0.8)"/>
         <stop offset="100%" stop-color="rgba(0, 255, 0, 1)"/>
       </linearGradient>
-
       <linearGradient id="satelliteLaserGradient" x1="0%" y1="50%" x2="100%" y2="50%">
         <stop offset="0%" stop-color="rgba(255, 0, 0, 0.5)"/>
         <stop offset="50%" stop-color="rgba(255, 100, 100, 1)"/>
         <stop offset="100%" stop-color="rgba(255, 0, 0, 0.5)"/>
       </linearGradient>
-
       <filter id="laserGlow" x="-50%" y="-50%" width="200%" height="200%">
           <!-- Simplified for performance, especially for particles -->
           <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="rgba(0, 255, 0, 0.6)"/>
       </filter>
-
       <!-- Generic glow filter for cracks -->
       <filter id="crackGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="0" stdDeviation="15" flood-color="rgba(255, 0, 0, 0.8)"/>
       </filter>
-
       <!-- Asteroid Gradients for varied appearance -->
       <radialGradient id="asteroidGradientGrey" cx="50%" cy="50%" r="50%" fx="60%" fy="40%">
         <stop offset="0%" stop-color="#a0a0a0"/>
@@ -115,7 +134,6 @@
         <stop offset="50%" stop-color="#905050"/>
         <stop offset="100%" stop-color="#602020"/>
       </radialGradient>
-
       <!-- Nuke Projectile Gradient -->
       <radialGradient id="nukeGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
         <stop offset="0%" stop-color="rgba(255, 255, 0, 1)"/>
@@ -130,15 +148,12 @@
         <stop offset="80%" stop-color="rgba(200, 50, 0, 0.4)"/>
         <stop offset="100%" stop-color="rgba(100, 0, 0, 0)"/>
       </radialGradient>
-
       <!-- Crack Gradient (Bright Yellow center, Red edges) -->
       <radialGradient id="crackGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
         <stop offset="0%" stop-color="rgba(255, 255, 0, 1)"/>    <!-- Bright Yellow -->
         <stop offset="50%" stop-color="rgba(255, 165, 0, 0.8)"/> <!-- Orange -->
         <stop offset="100%" stop-color="rgba(255, 0, 0, 0.6)"/>  <!-- Red -->
       </radialGradient>
-
-
       <!-- Defender Gradient (Purple-Blue - More Pronounced) -->
       <radialGradient id="defenderGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
         <stop offset="0%" stop-color="#E6E6FA"/> <!-- Lavender (brighter highlight) -->
@@ -146,26 +161,26 @@
         <stop offset="80%" stop-color="#6A5ACD"/> <!-- SlateBlue -->
         <stop offset="100%" stop-color="#362F6B"/> <!-- Darker SlateBlue (deeper shadow) -->
       </radialGradient>
-
       <!-- Main Thruster Fire Gradient (Yellow to Red) -->
       <radialGradient id="mainThrusterFireGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
         <stop offset="0%" stop-color="rgba(255, 255, 0, 1)"/>    <!-- Bright Yellow -->
         <stop offset="50%" stop-color="rgba(255, 165, 0, 0.8)"/> <!-- Orange -->
         <stop offset="100%" stop-color="rgba(255, 0, 0, 0)"/>    <!-- Transparent Red -->
       </radialGradient>
-
       <!-- Defender Thruster Pod Gradient (Blue to Black) -->
       <radialGradient id="defenderThrusterPodGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
         <stop offset="0%" stop-color="#00BFFF"/> <!-- Deep Sky Blue -->
         <stop offset="100%" stop-color="#000000"/> <!-- Black -->
       </radialGradient>
-
       <!-- RCS Thruster Fire Gradient (Light Blue to Transparent) -->
       <radialGradient id="rcsThrusterFireGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
         <stop offset="0%" stop-color="rgba(173, 216, 230, 0.8)"/> <!-- Light Blue -->
         <stop offset="100%" stop-color="rgba(173, 216, 230, 0)"/> <!-- Transparent Light Blue -->
       </radialGradient>
     </defs>
+    <g id="starsLayer"></g>
+    <g id="gameplayLayer"></g>
+    <g id="effectsLayer"></g>
   </svg>
   <div id="stats"></div>
   <div id="dateTimeDisplay"></div> <!-- New div for date and time -->
@@ -196,11 +211,11 @@
     canvas.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
     // Define SVG layers
-    let starsContainer; // New: Reference to the HTML div for stars
-    let gameplayLayer;
-    let effectsLayer;
+    let starsLayer; // Reference to the SVG group for stars
+    let gameplayLayer; // Reference to the SVG group for gameplay elements
+    let effectsLayer; // Reference to the SVG group for effects
 
-    // The 'stars' array will now hold Star objects (HTML div based)
+    // The 'stars' array will now hold Star objects (SVG circle based)
     const stars = []; 
     const defenders = []; // Renamed from satellites
     const asteroids = [];
@@ -1032,65 +1047,66 @@
 
 
     /**
-     * Represents a star in the background (HTML div based).
+     * Represents a star in the background (SVG circle based).
      * @param {number} x - X coordinate.
      * @param {number} y - Y coordinate.
-     * @param {number} size - Size of the star.
-     * @param {HTMLElement} [element=null] - Optional existing HTML element to reuse.
+     * @param {number} size - Radius of the star.
+     * @param {SVGElement} [element=null] - Optional existing SVG element to reuse.
      */
     class Star {
       constructor(x, y, size, element = null) {
         this.x = x;
         this.y = y;
-        this.size = size;
-        this.element = element || document.createElement('div');
-        this.element.className = 'star'; // Apply base star CSS
-        this.element.style.width = `${this.size}px`;
-        this.element.style.height = `${this.size}px`;
+        this.size = size; // This will be the radius for SVG circle
+        this.element = element || createSVGElement('circle'); // Use createSVGElement
+        this.element.setAttribute('class', 'star'); // Set SVG attribute
+        this.element.setAttribute('r', this.size / 2); // Set radius
         this.element.style.display = ''; // Ensure visible if reused
         
         // Set initial color
         this.updateColor(); 
         
         // Initial position (will be updated by update() method)
-        this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+        this.element.setAttribute('cx', this.x); // Set cx
+        this.element.setAttribute('cy', this.y); // Set cy
 
         if (!element) { // Only append if new element
-            starsContainer.appendChild(this.element);
+            starsLayer.appendChild(this.element); // Append to starsLayer (SVG group)
         }
       }
 
       update(deltaTime) {
-        this.x += starfieldVx * deltaTime; // Use global starfield velocity
-        this.y += starfieldVy * deltaTime; // Use global starfield velocity
+        this.x += starfieldVx * deltaTime;
+        this.y += starfieldVy * deltaTime;
 
         // Wrapping logic for all directions
-        if (starfieldVx > 0 && this.x > width + this.size) { // Moving right, off right edge
-            this.x = -this.size;
+        // Use this.size (radius) for boundary checks
+        if (starfieldVx > 0 && this.x > width + this.size / 2) { // Moving right, off right edge
+            this.x = -this.size / 2;
             this.y = random(0, height);
-        } else if (starfieldVx < 0 && this.x < -this.size) { // Moving left, off left edge
-            this.x = width + this.size;
+        } else if (starfieldVx < 0 && this.x < -this.size / 2) { // Moving left, off left edge
+            this.x = width + this.size / 2;
             this.y = random(0, height);
         }
 
-        if (starfieldVy > 0 && this.y > height + this.size) { // Moving down, off bottom edge
-            this.y = -this.size;
+        if (starfieldVy > 0 && this.y > height + this.size / 2) { // Moving down, off bottom edge
+            this.y = -this.size / 2;
             this.x = random(0, width); // New X when wrapping vertically
-        } else if (starfieldVy < 0 && this.y < -this.size) { // Moving up, off top edge
-            this.y = height + this.size;
+        } else if (starfieldVy < 0 && this.y < -this.size / 2) { // Moving up, off top edge
+            this.y = height + this.size / 2;
             this.x = random(0, width); // New X when wrapping vertically
         }
 
-        // Use CSS transform for efficient positioning
-        this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+        // Update SVG attributes for positioning
+        this.element.setAttribute('cx', this.x);
+        this.element.setAttribute('cy', this.y);
       }
 
       updateColor() {
-        // Vary hue slightly around a white/blueish range, keep saturation low, lightness high
-        const hue = random(200, 240); // Blueish hues
-        const saturation = random(5, 15); // Low saturation for near-white
-        const lightness = random(90, 100); // High lightness for bright stars
-        this.element.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        const hue = random(200, 240);
+        const saturation = random(5, 15);
+        const lightness = random(90, 100);
+        this.element.setAttribute('fill', `hsl(${hue}, ${saturation}%, ${lightness}%)`); // Set SVG fill attribute
       }
 
       hide() {
@@ -4136,8 +4152,6 @@
     window.onload = async function() {
       getAudioContext(); // This will create and attempt to resume the context
 
-      starsContainer = document.getElementById('starsContainer'); // Get reference to the new stars container
-
       // Generate sound data URIs and decode into AudioBuffers
       const decodeAudio = async (dataUri) => {
         const response = await fetch(dataUri);
@@ -4172,18 +4186,10 @@
         aggregationSoundBuffer = await decodeAudio(generateSparkSound(50)); // A very short spark/fizz for aggregation
       } catch (e) { console.error("Failed to load aggregationSoundBuffer:", e); }
 
-      // Create and append SVG layers
-      starsLayer = createSVGElement('g');
-      starsLayer.setAttribute('id', 'starsLayer');
-      canvas.appendChild(starsLayer);
-
-      gameplayLayer = createSVGElement('g');
-      gameplayLayer.setAttribute('id', 'gameplayLayer');
-      canvas.appendChild(gameplayLayer);
-
-      effectsLayer = createSVGElement('g');
-      effectsLayer.setAttribute('id', 'effectsLayer');
-      canvas.appendChild(effectsLayer);
+      // Get references to the pre-defined SVG layers
+      starsLayer = document.getElementById('starsLayer');
+      gameplayLayer = document.getElementById('gameplayLayer');
+      effectsLayer = document.getElementById('effectsLayer');
 
       // Pre-populate object pools
       for (let i = 0; i < MAX_LASERS; i++) {
