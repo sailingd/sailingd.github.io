@@ -22,18 +22,6 @@
     border-radius: 10px; /* Rounded corners for the canvas area */
     z-index: 1; /* Place above stars (z-index: 0) */
   }
-  #stats {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    color: #e0e0e0; /* Light grey for stats */
-    font-size: 14px;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    padding: 8px 12px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    z-index: 100; /* Ensure stats are on top */
-  }
   #dateTimeDisplay {
     position: absolute;
     top: 0; /* Set initial top */
@@ -95,6 +83,61 @@
     background-color: rgba(70, 70, 70, 0.9);
     border-color: rgba(255, 255, 255, 0.5);
   }
+
+  /* Styles for the square nuke button */
+  .nuke-button {
+    position: absolute;
+    bottom: 20px; /* Adjust as needed */
+    right: 20px; /* Adjust as needed */
+    width: 80px; /* Width of the square */
+    height: 80px; /* Height of the square */
+    border-radius: 8px; /* Slightly rounded corners for a modern look */
+    background-color: rgba(255, 0, 0, 0.4); /* More transparent red background */
+    color: white;
+    font-size: 1.2em;
+    font-weight: bold;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    line-height: 1.2; /* Adjust line height for vertical centering of text */
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Initial subtle glow */
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    z-index: 9999; /* Ensure it's on top */
+  }
+
+  .nuke-button:hover {
+    background-color: rgba(255, 0, 0, 0.6); /* Slightly less transparent on hover */
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+  }
+
+  .nuke-button:disabled {
+    background-color: rgba(50, 50, 50, 0.3); /* More transparent dark background when disabled */
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #a0a0a0;
+    cursor: not-allowed;
+    box-shadow: none;
+    animation: none; /* Stop pulsation when disabled */
+  }
+
+  @keyframes pulse-red {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 15px rgba(255, 0, 0, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+  }
+
+  .nuke-ready-pulse {
+    animation: pulse-red 2s infinite;
+  }
 </style>
 </head>
 <body>
@@ -140,12 +183,12 @@
         <stop offset="30%" stop-color="rgba(255, 165, 0, 0.8)"/>
         <stop offset="100%" stop-color="rgba(255, 0, 0, 0.1)"/>
       </radialGradient>
-      <!-- Nuke Fireball Gradient -->
+      <!-- Nuke Fireball Gradient (More Transparent) -->
       <radialGradient id="fireballGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-        <stop offset="0%" stop-color="rgba(255, 255, 200, 1)"/>
-        <stop offset="20%" stop-color="rgba(255, 200, 0, 0.9)"/>
-        <stop offset="50%" stop-color="rgba(255, 100, 0, 0.7)"/>
-        <stop offset="80%" stop-color="rgba(200, 50, 0, 0.4)"/>
+        <stop offset="0%" stop-color="rgba(255, 255, 200, 0.6)"/> <!-- Reduced opacity -->
+        <stop offset="20%" stop-color="rgba(255, 200, 0, 0.5)"/>  <!-- Reduced opacity -->
+        <stop offset="50%" stop-color="rgba(255, 100, 0, 0.3)"/>  <!-- Reduced opacity -->
+        <stop offset="80%" stop-color="rgba(200, 50, 0, 0.1)"/>   <!-- Reduced opacity -->
         <stop offset="100%" stop-color="rgba(100, 0, 0, 0)"/>
       </radialGradient>
       <!-- Crack Gradient (Bright Yellow center, Red edges) -->
@@ -182,28 +225,27 @@
     <g id="gameplayLayer"></g>
     <g id="effectsLayer"></g>
   </svg>
-  <div id="stats"></div>
   <div id="dateTimeDisplay"></div> <!-- New div for date and time -->
   <div id="perfStats"></div> <!-- New div for performance stats -->
   <div id="controls" class="absolute bottom-4 left-4 z-100 flex space-x-2">
     <button id="qualityToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Quality: High</button>
     <button id="muteToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Mute: Off</button>
     <button id="pauseToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Pause: Off</button>
-    <button id="nukeButton" class="px-4 py-2 bg-red-800/50 text-red-200 rounded-lg shadow-none hover:bg-red-700/70 transition-colors duration-200">Nuke: Ready</button>
     <button id="dateTimeToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Date/Time: On</button> <!-- New button -->
     <button id="perfStatsToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Perf Stats: Off</button> <!-- New button -->
   </div>
 
+  <button id="nukeButton" class="nuke-button" disabled>Nuke</button>
+
   <script>
     const canvas = document.getElementById('spaceCanvas');
-    const statsDiv = document.getElementById('stats');
     const dateTimeDisplay = document.getElementById('dateTimeDisplay'); // New: Get date/time display div
     const perfStatsDiv = document.getElementById('perfStats'); // New: Get performance stats div
     const qualityToggleBtn = document.getElementById('qualityToggle');
+    const dateTimeToggleBtn = document.getElementById('dateTimeToggleBtn'); // New: Get date/time toggle button
     const muteToggleBtn = document.getElementById('muteToggle'); // Get the new mute button
     const pauseToggleBtn = document.getElementById('pauseToggle'); // Get the new pause button
     const nukeButton = document.getElementById('nukeButton'); // Get the new nuke button
-    const dateTimeToggleBtn = document.getElementById('dateTimeToggleBtn'); // New: Get date/time toggle button
     const perfStatsToggleBtn = document.getElementById('perfStatsToggleBtn'); // New: Get perf stats toggle button
 
     let width = window.innerWidth;
@@ -263,6 +305,8 @@
     const MAX_PARTICLES = 100; // Max concurrent particles in pool (reduced for performance)
     const MAX_FIREBALLS = 5; // Max concurrent fireball effects (should be low)
 
+    const SCALE_FACTOR = 0.75; // All object sizes will be scaled by this factor
+
     // Global arrays for centralized animation
     const activeParticles = []; // New: To manage all active explosion/spark particles
     const activeFireballs = []; // New: To manage active fireball effects
@@ -273,11 +317,14 @@
     let isPaused = false; // New pause state variable
 
     // Nuke specific variables
-    let nukeAvailable = true; // Is a nuke ready to fire?
+    let nukeAvailable = false; // Is a nuke ready to fire?
     const nukeCooldown = 15000; // 15 seconds cooldown after firing
-    let lastNukeFiredTime = 0;
+    let nukeNextAvailableTime = Date.now() + nukeCooldown; // Initialize next available time
     const nukeGainInterval = 60000; // Gain a nuke every 60 seconds
     let lastNukeGainTime = Date.now(); // Initialize with current time
+
+    // Browser detection for iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
     // FPS counter variables
     let lastFrameTime = 0; // Time of the previous frame
@@ -287,7 +334,7 @@
 
     // Performance monitoring variables
     const accumulatedPerformanceData = {
-        totalFrameTime: 0,
+        overallUpdateTime: 0, // Total time spent in the JS update function
         stars: 0,
         defenders: 0,
         asteroids: 0,
@@ -315,10 +362,10 @@
     let lastAsteroidSpawnTime = 0;
     let lastUfoSpawnTime = 0;
 
-    const MIN_ASTEROID_SIZE = 25; // Minimum size before an asteroid vaporizes
-    const MAX_ASTEROID_SIZE = 80;
+    const MIN_ASTEROID_SIZE = 25 * SCALE_FACTOR; // Minimum size before an asteroid vaporizes
+    const MAX_ASTEROID_SIZE = 80 * SCALE_FACTOR;
     const ASTEROID_MAX_IRREGULARITY = 0.15; // Max irregularity factor used in generateIrregularPolygon (reduced for rounder asteroids)
-    const ASTEROID_STROKE_WIDTH = 2; // Stroke width used for asteroid body
+    const ASTEROID_STROKE_WIDTH = 2 * SCALE_FACTOR; // Stroke width used for asteroid body
 
     // Hardcoded list of UFO words for message construction
     const ufoWords = [
@@ -615,6 +662,10 @@
         dateTimeDisplay.innerHTML = `${dateStr}<br>${timeStr}`;
     }
 
+
+    /**
+     * Toggles the visibility of the performance stats display.
+     */
     /**
      * Toggles the visibility of the date/time display.
      */
@@ -669,8 +720,8 @@
         // Random base hue for the UFO (e.g., blue, purple, green, grey-blue)
         const baseHue = random(180, 300); // Range for blues, purples, magentas
         const saturation = random(50, 90); // High saturation
-        const lightnessStart = random(60, 90); // Lighter start
-        const lightnessEnd = random(20, 50); // Darker end
+        const lightnessStart = random(30, 60); // Darker start
+        const lightnessEnd = random(10, 30); // Even darker end
 
         // Stop 1: Lighter color
         const stop1 = createSVGElement('stop');
@@ -989,7 +1040,7 @@
                 }
 
                 setTimeout(() => {
-                    const baseFreq = random(250, 700); // Base frequency for the chord
+                    const baseFreq = random(150, 900); // Base frequency for the chord (increased range for more variation)
                     const frequencies = [
                         baseFreq,              // Root
                         baseFreq * 1.25,       // Major Third (approx. 5/4 ratio)
@@ -1057,7 +1108,7 @@
       constructor(x, y, size, element = null) {
         this.x = x;
         this.y = y;
-        this.size = size; // This will be the radius for SVG circle
+        this.size = size * SCALE_FACTOR; // This will be the radius for SVG circle
         this.element = element || createSVGElement('circle'); // Use createSVGElement
         this.element.setAttribute('class', 'star'); // Set SVG attribute
         this.element.setAttribute('r', this.size / 2); // Set radius
@@ -1133,7 +1184,7 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.size = random(25, 40); // Slightly larger size for more distinct shape
+        this.size = random(25, 40) * SCALE_FACTOR; // Slightly larger size for more distinct shape
         // Convert velocities to per-millisecond for delta time scaling
         this.vx = 0; // Initial velocity X (will be controlled by AI)
         this.vy = 0; // Initial velocity Y (will be controlled by AI)
@@ -1145,7 +1196,7 @@
         this.lastFireTime = Date.now() + random(0, this.fireInterval); // Stagger initial firing
 
         this.thrustForce = 0.005 / TARGET_FRAME_DURATION; // Acceleration per frame
-        this.rotationForce = 0.01 / TARGET_FRAME_DURATION; // Increased rotational acceleration per frame
+        this.rotationForce = 0.05 / TARGET_FRAME_DURATION; // Increased rotational acceleration per frame (more aggressive)
         this.maxSpeed = 3.0 / TARGET_FRAME_DURATION; // Max linear speed
         this.maxRotationSpeed = 0.5 / TARGET_FRAME_DURATION; // Max rotational speed
 
@@ -1155,13 +1206,13 @@
         this.lastRcsImpulseTime = 0; // When the last RCS impulse was applied
 
         this.isThrusting = false; // Is the main thruster currently active?
-        this.thrustOnDuration = 1000; // How long main thruster stays on (ms)
-        this.thrustOffDuration = 1000; // How long main thruster stays off (ms) - Reduced for more frequent thrusting
+        this.thrustOnDuration = 1000 * SCALE_FACTOR; // How long main thruster stays on (ms)
+        this.thrustOffDuration = 1000 * SCALE_FACTOR; // How long main thruster stays off (ms) - Reduced for more frequent thrusting
         this.lastThrustToggleTime = 0; // When thrust state last changed (on to off, or off to on)
 
         this.roamingTargetX = random(width * 0.2, width * 0.8); // Initial roaming target
         this.roamingTargetY = random(height * 0.2, height * 0.8);
-        this.roamingTargetReachedThreshold = this.size * 10; // Distance to consider target reached
+        this.roamingTargetReachedThreshold = this.size * 10 * SCALE_FACTOR; // Distance to consider target reached
 
         this.element = createSVGElement('g'); // Group for defender parts
         this.element.setAttribute('class', 'defender'); // Renamed class
@@ -1191,6 +1242,10 @@
        */
       generateSymmetricalShapePoints(numSegments, irregularity, baseWidth, baseHeight, offsetX = 0, offsetY = 0, rotationDegrees = 0) {
         let rightHalfPoints = [];
+        // Generate random offsets for each segment point *once* to ensure perfect symmetry
+        const xOffsets = Array.from({length: numSegments + 1}, () => random(-irregularity, irregularity));
+        const yOffsets = Array.from({length: numSegments + 1}, () => random(-irregularity * 0.5, irregularity * 0.5)); // Less y irregularity
+
         // Generate points for the right half, from top to bottom
         for (let i = 0; i <= numSegments; i++) {
           const progress = i / numSegments; // Progress from 0 to 1 along the height
@@ -1200,8 +1255,8 @@
           const currentWidthFactor = Math.sin(progress * Math.PI); // 0 at top/bottom, 1 in middle
           const currentWidth = (baseWidth / 2) * (0.2 + 0.8 * currentWidthFactor); // Min width 20% of max, max 100%
           
-          const x = currentWidth * (1 + random(-irregularity, irregularity));
-          const y = (progress - 0.5) * baseHeight * (1 + random(-irregularity * 0.5, irregularity * 0.5)); // Y from -baseHeight/2 to +baseHeight/2
+          const x = currentWidth * (1 + xOffsets[i]); // Use pre-generated offset for X
+          const y = (progress - 0.5) * baseHeight * (1 + yOffsets[i]); // Use pre-generated offset for Y
 
           rightHalfPoints.push({ x: x, y: y });
         }
@@ -1237,8 +1292,8 @@
         }
 
         // Main A-shaped body
-        const bodyWidth = this.size * random(1.0, 1.2);
-        const bodyHeight = this.size * random(1.5, 1.8);
+        const bodyWidth = this.size * random(1.0, 1.2) * SCALE_FACTOR;
+        const bodyHeight = this.size * random(1.5, 1.8) * SCALE_FACTOR;
         const tipY = -bodyHeight / 2;
         const baseY = bodyHeight / 2;
         const baseWidth = bodyWidth;
@@ -1261,7 +1316,7 @@
         this.element.appendChild(body);
 
         // Central polygonal "cockpit" or sensor array
-        const cockpitSize = this.size * random(0.2, 0.3);
+        const cockpitSize = this.size * random(0.2, 0.3) * SCALE_FACTOR;
         const cockpitPoints = [
           `0,${-cockpitSize * 0.8}`,
           `${cockpitSize * 0.5},${-cockpitSize * 0.4}`,
@@ -1279,9 +1334,9 @@
         this.element.appendChild(cockpit);
 
         // Polygonal thruster exhausts (two symmetrical shapes at the back)
-        const thrusterWidth = this.size * random(0.2, 0.3);
-        const thrusterHeight = this.size * random(0.1, 0.15);
-        const thrusterOffset = this.size * random(0.3, 0.4); // Distance from center
+        const thrusterWidth = this.size * random(0.2, 0.3) * SCALE_FACTOR;
+        const thrusterHeight = this.size * random(0.1, 0.15) * SCALE_FACTOR;
+        const thrusterOffset = this.size * random(0.3, 0.4) * SCALE_FACTOR; // Distance from center
 
         // Left thruster
         const thruster1Points = [
@@ -1312,8 +1367,8 @@
         this.element.appendChild(thruster2);
 
         // --- Main Thruster Fire (Two Triangular, behind each thruster) ---
-        const fireLength = this.size * 1.5; // Length of the fire effect
-        const fireWidth = this.size * 0.8; // Width of the fire effect at its base
+        const fireLength = this.size * 1.5 * SCALE_FACTOR; // Length of the fire effect
+        const fireWidth = this.size * 0.8 * SCALE_FACTOR; // Width of the fire effect at its base
         const fireOffset = baseY + thrusterHeight * 0.5; // Position behind the thrusters
 
         // Left Main Thruster Fire
@@ -1333,10 +1388,10 @@
         this.element.appendChild(this.mainThrusterRightElement);
 
         // --- RCS Thruster Fire (Triangular) ---
-        const rcsSize = this.size * 0.3; // Increased size for bigger triangles
+        const rcsSize = this.size * 0.3 * SCALE_FACTOR; // Increased size for bigger triangles
         // Position RCS thrusters closer to the top of the A-shape, on the "shoulders"
         const rcsOffsetFrontX = baseWidth / 2 * random(0.5, 0.7); // Closer to the center line
-        const rcsOffsetFrontY = tipY + this.size * random(0.1, 0.3); // Slightly below the tip
+        const rcsOffsetFrontY = tipY + this.size * random(0.1, 0.3) * SCALE_FACTOR; // Slightly below the tip
 
         // Left RCS Thruster Fire (Triangular)
         this.rcsLeftElement = createSVGElement('polygon');
@@ -1391,7 +1446,7 @@
         if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
 
         const rotationThreshold = 0.1; // Radians
-        const thrustActivationThreshold = this.size * 2; // Distance to start thrusting if not already
+        const thrustActivationThreshold = this.size * 2 * SCALE_FACTOR; // Distance to start thrusting if not already
 
         // --- Rotation Control (RCS Thrusters) ---
         // --- Rotation Control (RCS Thrusters) ---
@@ -2197,11 +2252,11 @@
         if (!hitFireball) {
             hitFireball = new FireballEffect();
         }
-        hitFireball.reset(impactX, impactY, this.size * 0.5, 200, 'visual'); // Smaller, shorter fireball for a hit
+        hitFireball.reset(impactX, impactY, this.size * 0.5 * SCALE_FACTOR, 200, 'visual'); // Smaller, shorter fireball for a hit
         activeFireballs.push(hitFireball);
 
         // Create sparks at the impact point, inheriting asteroid's velocity
-        createExplosion(impactX, impactY, this.size, 'spark', this.vx, this.vy);
+        createExplosion(impactX, impactY, this.size * SCALE_FACTOR, 'spark', this.vx, this.vy);
 
         const currentHealthRatio = this.health / this.initialHealth;
         for (let i = this.damageThresholds.length - 1; i >= 0; i--) {
@@ -2238,13 +2293,13 @@
 
         playSpatialSound(explosionBuffer, this.x, 1, finalPitch); 
         // Explosion particles should inherit asteroid's velocity
-        createExplosion(this.x, this.y, this.size, 'explosion', this.vx, this.vy); 
+        createExplosion(this.x, this.y, this.size * SCALE_FACTOR, 'explosion', this.vx, this.vy); 
 
         let fireball = fireballPool.pop();
         if (!fireball) {
             fireball = new FireballEffect();
         }
-        fireball.reset(this.x, this.y, this.size * 1.2, 400, 'visual'); // Reduced size and duration
+        fireball.reset(this.x, this.y, this.size * 1.2 * SCALE_FACTOR, 400, 'visual'); // Reduced size and duration
         activeFireballs.push(fireball);
 
         const index = asteroids.indexOf(this);
@@ -2304,26 +2359,34 @@
           ));
         }
 
-        // Temporarily enable transition for transform to animate the explosion scaling.
-        // The duration of 0.3s for transform can be different from opacity's 0.5s if desired.
-        // Here, we make them both 0.5s for simplicity.
-        const animationDuration = 500; // ms
-        this.element.style.transition = `opacity ${animationDuration/1000}s ease-out, transform ${animationDuration/1000}s ease-out`;
-
-        // Trigger the animations by setting the final state
-        this.element.style.opacity = 0;
-        // The transform will animate from its current state (scale 1) to scale 1.5
-        this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${this.rotation}) scale(1.5)`); 
-        
-        // Remove from DOM after the animation completes
-        setTimeout(() => {
+        // If on iOS, just remove the element immediately after splitting.
+        // Otherwise, perform the expand and fade animation.
+        if (isIOS) {
             if (this.element.parentNode) {
                 gameplayLayer.removeChild(this.element); // Remove from gameplay layer
             }
-            // Optional: Reset transition if the element were to be pooled, 
-            // but since it's removed, it's not strictly necessary here.
-            // if (this.element) this.element.style.transition = 'opacity 0.5s ease-out';
-        }, animationDuration);
+        } else {
+            // Temporarily enable transition for transform to animate the explosion scaling.
+            // The duration of 0.3s for transform can be different from opacity's 0.5s if desired.
+            // Here, we make them both 0.5s for simplicity.
+            const animationDuration = 500; // ms
+            this.element.style.transition = `opacity ${animationDuration/1000}s ease-out, transform ${animationDuration/1000}s ease-out`;
+
+            // Trigger the animations by setting the final state
+            this.element.style.opacity = 0;
+            // The transform will animate from its current state (scale 1) to scale 1.5
+            this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${this.rotation}) scale(1.5)`); 
+            
+            // Remove from DOM after the animation completes
+            setTimeout(() => {
+                if (this.element.parentNode) {
+                    gameplayLayer.removeChild(this.element); // Remove from gameplay layer
+                }
+                // Optional: Reset transition if the element were to be pooled, 
+                // but since it's removed, it's not strictly necessary here.
+                // if (this.element) this.element.style.transition = 'opacity 0.5s ease-out';
+            }, animationDuration);
+        }
       }
     }
 
@@ -2375,12 +2438,12 @@
 
         // Update shapeElement attributes based on type
         if (this.type === 'user') {
-            this.initialWidth = 15; // Max width at origin
-            this.finalWidth = 1; // Min width at target (or beyond)
+            this.initialWidth = 15 * SCALE_FACTOR; // Max width at origin
+            this.finalWidth = 1 * SCALE_FACTOR; // Min width at target (or beyond)
             this.maxLength = Math.hypot(this.predictedTargetX - this.x, this.predictedTargetY - this.y); // Distance from origin to target
-            this.visualLength = 100; // Fixed visual length of the plasma burst (length of the rect)
-            this.growthDuration = 200; // Duration for the laser's tip to reach the target (faster)
-            this.fadeOutDuration = 200; // Duration for the laser to fade out after reaching target
+            this.visualLength = 100 * SCALE_FACTOR; // Fixed visual length of the plasma burst (length of the rect)
+            this.growthDuration = 200 * SCALE_FACTOR; // Duration for the laser's tip to reach the target (faster)
+            this.fadeOutDuration = 200 * SCALE_FACTOR; // Duration for the laser to fade out after reaching target
             this.initialLife = this.growthDuration + this.fadeOutDuration; // Total life duration
             this.lifeRemaining = this.initialLife; // Initialize remaining life
             this.startTime = Date.now();
@@ -2405,8 +2468,8 @@
             this.shapeElement.setAttribute('height', this.initialWidth); // Initial height, will be tapered in update
 
         } else { // Defender laser
-            this.initialWidth = 3; // Fixed width for defender
-            this.initialLength = 150; // Fixed length for defender
+            this.initialWidth = 3 * SCALE_FACTOR; // Fixed width for defender
+            this.initialLength = 150 * SCALE_FACTOR; // Fixed length for defender
             
             // Defender lasers travel at a fixed speed
             this.vx = Math.cos(angle) * DEFENDER_LASER_SPEED_PX_PER_MS;
@@ -2466,7 +2529,7 @@
                 let hitObject = null;
                 // Check for collision at the PREDICTED target point
                 // Use a small radius around the predicted target point for hit detection
-                const hitDetectionRadius = 10; // Pixels around the clicked point
+                const hitDetectionRadius = 10 * SCALE_FACTOR; // Pixels around the clicked point
 
                 // Check UFOs
                 for (let j = ufos.length - 1; j >= 0; j--) {
@@ -2520,7 +2583,7 @@
 
             // Check for collision with the actual target object
             // Use a larger collision radius for defender lasers to make them more effective
-            const collisionRadius = 20; // Increased from 10
+            const collisionRadius = 20 * SCALE_FACTOR; // Increased from 10
             if (this.actualTarget && Math.hypot(tipX - this.actualTarget.x, tipY - this.actualTarget.y) < (this.actualTarget.size / 2) + collisionRadius && !this.hasDamaged) {
                 // The target object is already known: this.actualTarget
                 this.actualTarget.takeDamage(this.damage, this.angle, tipX, tipY); // Pass actual impact coordinates
@@ -2604,9 +2667,9 @@
             this.targetY = targetY;
             this.hasExploded = false;
 
-            this.initialProjectileSize = 80; // Start large
-            this.finalProjectileSize = 1; // Shrink to this size
-            this.explosionRadius = 600; // Further reduced radius of destruction for the nuke
+            this.initialProjectileSize = 80 * SCALE_FACTOR; // Start large
+            this.finalProjectileSize = 1 * SCALE_FACTOR; // Shrink to this size
+            this.explosionRadius = 600 * SCALE_FACTOR; // Further reduced radius of destruction for the nuke
             this.speed = 5.0 / TARGET_FRAME_DURATION; // Speed remains the same
 
             this.vx = Math.cos(Math.atan2(targetY - startY, targetX - startX)) * this.speed;
@@ -2698,13 +2761,13 @@
                 fireball = new FireballEffect();
             }
             // Nuke fireball, type is 'nuke'
-            fireball.reset(this.x, this.y, this.explosionRadius, 2000, 'nuke');
+            fireball.reset(this.x, this.y, this.explosionRadius * SCALE_FACTOR, 2000, 'nuke');
             activeFireballs.push(fireball);
 
             // Still create some smaller particles for added visual chaos
-            createExplosion(this.x, this.y, this.explosionRadius * 0.75, 'nukeFireball'); // Increased particle base size
+            createExplosion(this.x, this.y, this.explosionRadius * 0.75 * SCALE_FACTOR, 'nukeFireball'); // Increased particle base size
             
-            destroyObjectsInRadius(this.x, this.y, this.explosionRadius, true); // Pass true for isNukeHit
+            destroyObjectsInRadius(this.x, this.y, this.explosionRadius * SCALE_FACTOR, true); // Pass true for isNukeHit
             this.element.style.display = 'none'; // Hide immediately on explosion
         }
 
@@ -2819,13 +2882,13 @@
       constructor() {
         this.x = random(width * 0.2, width * 0.8);
         this.y = random(height * 0.2, height * 0.8);
-        this.size = random(40, 70); // This is the final, normal size of the UFO
+        this.size = random(40, 70) * SCALE_FACTOR; // This is the final, normal size of the UFO
         this.currentVisualScale = 0.01; // Start very small for warp-in effect
         this.warpInStartTime = Date.now();
-        this.warpInDuration = 1000; // 1 second warp-in duration
+        this.warpInDuration = 1000 * SCALE_FACTOR; // 1 second warp-in duration
 
-        this.initialHealth = 500; // Increased UFO health
-        this.health = 500; // UFOs start with full health
+        this.initialHealth = 500 * SCALE_FACTOR; // Increased UFO health
+        this.health = 500 * SCALE_FACTOR; // UFOs start with full health
         // Convert velocities to per-millisecond for delta time scaling
         this.vx = random(-1.5, 1.5) / TARGET_FRAME_DURATION; // Increased speed
         this.vy = random(-1.5, 1.5) / TARGET_FRAME_DURATION; // Increased speed
@@ -2927,8 +2990,8 @@
         this.parts = []; // Reset parts array
 
         // --- Main Body ---
-        const mainBodyWidth = this.size * random(1.5, 2.5); // Wider main body
-        const mainBodyHeight = this.size * random(0.4, 0.8); // Made flatter (reduced height range)
+        const mainBodyWidth = this.size * random(1.5, 2.5) * SCALE_FACTOR; // Wider main body
+        const mainBodyHeight = this.size * random(0.4, 0.8) * SCALE_FACTOR; // Made flatter (reduced height range)
         const mainBodySegments = Math.floor(random(4, 8)); // More segments for main body
         const mainBodyIrregularity = random(0.1, 0.3);
 
@@ -2942,11 +3005,11 @@
         this.parts.push(mainBody);
 
         // --- Cockpit / Top Dome ---
-        const cockpitWidth = mainBodyWidth * random(0.3, 0.6);
-        const cockpitHeight = mainBodyHeight * random(0.2, 0.4);
+        const cockpitWidth = mainBodyWidth * random(0.3, 0.6) * SCALE_FACTOR;
+        const cockpitHeight = mainBodyHeight * random(0.2, 0.4) * SCALE_FACTOR;
         const cockpitSegments = Math.floor(random(3, 5));
         const cockpitIrregularity = random(0.05, 0.15);
-        const cockpitOffsetY = -mainBodyHeight * random(0.2, 0.4); // Position above center
+        const cockpitOffsetY = -mainBodyHeight * random(0.2, 0.4) * SCALE_FACTOR; // Position above center
 
         const cockpitPoints = this.generateSymmetricalShapePoints(
             cockpitSegments, cockpitIrregularity, cockpitWidth, cockpitHeight, 0, cockpitOffsetY
@@ -2960,12 +3023,12 @@
         // --- Side Wings / Appendages ---
         const numWingPairs = Math.floor(random(1, 3)); // 1 to 2 pairs of wings
         for (let i = 0; i < numWingPairs; i++) {
-            const wingWidth = mainBodyWidth * random(0.4, 0.7);
-            const wingHeight = mainBodyHeight * random(0.1, 0.3);
+            const wingWidth = mainBodyWidth * random(0.4, 0.7) * SCALE_FACTOR;
+            const wingHeight = mainBodyHeight * random(0.1, 0.3) * SCALE_FACTOR;
             const wingSegments = Math.floor(random(2, 4));
             const wingIrregularity = random(0.1, 0.25);
-            const wingOffsetX = mainBodyWidth * random(0.4, 0.6); // Position further out
-            const wingOffsetY = mainBodyHeight * random(-0.2, 0.2); // Vertical position relative to main body
+            const wingOffsetX = mainBodyWidth * random(0.4, 0.6) * SCALE_FACTOR; // Position further out
+            const wingOffsetY = mainBodyHeight * random(-0.2, 0.2) * SCALE_FACTOR; // Vertical position relative to main body
 
             // Right Wing
             const rightWingPoints = this.generateSymmetricalShapePoints(
@@ -2990,12 +3053,12 @@
 
         // --- Rear Thrusters ---
         const numThrusters = Math.floor(random(2, 4)); // 2 to 3 thrusters
-        const thrusterSpacing = mainBodyWidth * 0.15;
-        const thrusterBaseY = mainBodyHeight * random(0.4, 0.6); // Position at the rear
+        const thrusterSpacing = mainBodyWidth * 0.15 * SCALE_FACTOR;
+        const thrusterBaseY = mainBodyHeight * random(0.4, 0.6) * SCALE_FACTOR; // Position at the rear
 
         for (let i = 0; i < numThrusters; i++) {
-            const thrusterWidth = this.size * random(0.1, 0.2);
-            const thrusterHeight = this.size * random(0.2, 0.4);
+            const thrusterWidth = this.size * random(0.1, 0.2) * SCALE_FACTOR;
+            const thrusterHeight = this.size * random(0.2, 0.4) * SCALE_FACTOR;
             const thrusterSegments = Math.floor(random(2, 3));
             const thrusterIrregularity = random(0.05, 0.1);
 
@@ -3013,9 +3076,9 @@
 
         // --- Symmetrical "Eyes" / "Sensors" (Glowing circles) ---
         const numEyePairs = Math.floor(random(1, 2)); // 1 pair of eyes
-        const eyeRadius = this.size * random(0.05, 0.1);
-        const eyeAttachY = -mainBodyHeight * random(0.3, 0.5); // Attach near the top of the main body
-        const eyeAttachXOffset = mainBodyWidth * random(0.15, 0.25); // Offset from center
+        const eyeRadius = this.size * random(0.05, 0.1) * SCALE_FACTOR;
+        const eyeAttachY = -mainBodyHeight * random(0.3, 0.5) * SCALE_FACTOR; // Attach near the top of the main body
+        const eyeAttachXOffset = mainBodyWidth * random(0.15, 0.25) * SCALE_FACTOR; // Offset from center
 
         for (let i = 0; i < numEyePairs; i++) {
             const currentEyeAttachX = eyeAttachXOffset * random(0.9, 1.1);
@@ -3053,7 +3116,7 @@
         this.messageText.setAttribute('text-anchor', 'middle'); // Center text horizontally
         this.messageText.setAttribute('dominant-baseline', 'hanging'); // Align text to top for easier background sizing
         this.messageText.setAttribute('font-family', 'Space Mono, monospace'); // Techy font
-        this.messageText.setAttribute('font-size', '1.2em'); // Relative font size
+        this.messageText.setAttribute('font-size', `${1.2 * SCALE_FACTOR}em`); // Relative font size
         this.messageText.setAttribute('fill', '#aaffaa'); // Default text color
         this.messageGroup.appendChild(this.messageText);
       }
@@ -3120,22 +3183,22 @@
       drawHealthBar() {
           // Health bar background
           this.healthBarBg = createSVGElement('rect');
-          this.healthBarBg.setAttribute('x', -this.size * 0.7); // Relative to UFO center
-          this.healthBarBg.setAttribute('y', this.size + 10); // Below UFO
-          this.healthBarBg.setAttribute('width', this.size * 1.4);
-          this.healthBarBg.setAttribute('height', 8);
+          this.healthBarBg.setAttribute('x', -this.size * 0.7 * SCALE_FACTOR); // Relative to UFO center
+          this.healthBarBg.setAttribute('y', this.size + 10 * SCALE_FACTOR); // Below UFO
+          this.healthBarBg.setAttribute('width', this.size * 1.4 * SCALE_FACTOR);
+          this.healthBarBg.setAttribute('height', 8 * SCALE_FACTOR);
           this.healthBarBg.setAttribute('fill', '#333');
-          this.healthBarBg.setAttribute('rx', 3);
-          this.healthBarBg.setAttribute('ry', 3);
+          this.healthBarBg.setAttribute('rx', 3 * SCALE_FACTOR);
+          this.healthBarBg.setAttribute('ry', 3 * SCALE_FACTOR);
           this.healthBarGroup.appendChild(this.healthBarBg); // Append to healthBarGroup
 
           // Health bar foreground
           this.healthBarFg = createSVGElement('rect');
-          this.healthBarFg.setAttribute('x', -this.size * 0.7);
-          this.healthBarFg.setAttribute('y', this.size + 10);
-          this.healthBarFg.setAttribute('height', 8);
-          this.healthBarFg.setAttribute('rx', 3);
-          this.healthBarFg.setAttribute('ry', 3);
+          this.healthBarFg.setAttribute('x', -this.size * 0.7 * SCALE_FACTOR);
+          this.healthBarFg.setAttribute('y', this.size + 10 * SCALE_FACTOR);
+          this.healthBarFg.setAttribute('height', 8 * SCALE_FACTOR);
+          this.healthBarFg.setAttribute('rx', 3 * SCALE_FACTOR);
+          this.healthBarFg.setAttribute('ry', 3 * SCALE_FACTOR);
           this.healthBarGroup.appendChild(this.healthBarFg); // Append to healthBarGroup
 
           this.updateHealthBar(); // Initial update
@@ -3146,7 +3209,7 @@
        */
       updateHealthBar() {
           if (!this.healthBarFg) return;
-          const totalBarWidth = this.size * 1.4;
+          const totalBarWidth = this.size * 1.4 * SCALE_FACTOR;
           const healthWidth = (this.health / this.initialHealth) * totalBarWidth;
           this.healthBarFg.setAttribute('width', Math.max(0, healthWidth)); // Ensure width doesn't go negative
 
@@ -3365,7 +3428,7 @@
         if (!fireball) {
             fireball = new FireballEffect();
         }
-        fireball.reset(this.x, this.y, this.size * 1.5, 800, 'visual'); // Reduced size and duration for UFO fireball
+        fireball.reset(this.x, this.y, this.size * 1.5 * SCALE_FACTOR, 800, 'visual'); // Reduced size and duration for UFO fireball
         activeFireballs.push(fireball);
       }
 
@@ -3385,14 +3448,14 @@
         this.messageText.textContent = `"${message}"`; // Add double quotes around the message
         
         // Position the message group below the health bar
-        const messageYOffset = this.size + 10 + 8 + 10; // UFO size + health bar offset + health bar height + padding
+        const messageYOffset = this.size + 10 * SCALE_FACTOR + 8 * SCALE_FACTOR + 10 * SCALE_FACTOR; // UFO size + health bar offset + health bar height + padding
         this.messageGroup.setAttribute('transform', `translate(0, ${messageYOffset})`);
 
         // Get text bounding box to size the background rectangle
         // Must be visible to get accurate bbox
         this.messageGroup.style.display = ''; 
         const bbox = this.messageText.getBBox();
-        const padding = 5; // Reduced padding for a smaller border
+        const padding = 5 * SCALE_FACTOR; // Reduced padding for a smaller border
         const bgWidth = bbox.width + padding * 2;
         const bgHeight = bbox.height + padding * 2;
         const bgX = bbox.x - padding;
@@ -3450,12 +3513,12 @@
         speakRoboticText(message, 50); // Play robotic voice for the message, faster (50ms per char)
 
         setTimeout(() => {
-          this.messageGroup.style.opacity = 0; // Fade out after 5 seconds
+          this.messageGroup.style.opacity = 0; // Fade out after 1 second
           setTimeout(() => {
               this.messageGroup.style.display = 'none'; // Hide after fade
               if (callback) callback(); // Signal completion
           }, parseFloat(settings.ufoMessageTransition) * 1000); // Wait for transition to complete
-        }, 5000);
+        }, 1000); // Reduced from 2000ms to 1000ms
       }
     }
 
@@ -3552,22 +3615,22 @@
 
       if (type === 'explosion') {
         numParticles = settings.asteroidNumParticles;
-        particleSizeMin = baseSize * 0.1;
-        particleSizeMax = baseSize * 0.3;
+        particleSizeMin = baseSize * 0.1 * SCALE_FACTOR;
+        particleSizeMax = baseSize * 0.3 * SCALE_FACTOR;
         particleSpeedMin = 3 / TARGET_FRAME_DURATION; // Increased speed
         particleSpeedMax = 8 / TARGET_FRAME_DURATION; // Increased speed
         particleLife = 30 * TARGET_FRAME_DURATION; // Reduced life to 0.5 seconds
       } else if (type === 'spark') { // Corrected to else if
         numParticles = settings.sparkNumParticles;
-        particleSizeMin = baseSize * 0.05; // Increased for more noticeable sparks
-        particleSizeMax = baseSize * 0.15; // Increased for more noticeable sparks
+        particleSizeMin = baseSize * 0.05 * SCALE_FACTOR; // Increased for more noticeable sparks
+        particleSizeMax = baseSize * 0.15 * SCALE_FACTOR; // Increased for more noticeable sparks
         particleSpeedMin = 1.5 / TARGET_FRAME_DURATION; // Increased speed
         particleSpeedMax = 4 / TARGET_FRAME_DURATION; // Increased speed
         particleLife = 30 * TARGET_FRAME_DURATION; // Increased life to 0.5 seconds for better visibility
       } else if (type === 'nukeFireball') { // New: Nuke explosion particles
         numParticles = 70; // Reduced number of particles for nuke explosion
-        particleSizeMin = baseSize * 0.05; // Larger particles
-        particleSizeMax = baseSize * 0.15; // Slightly reduced max size
+        particleSizeMin = baseSize * 0.05 * SCALE_FACTOR; // Larger particles
+        particleSizeMax = baseSize * 0.15 * SCALE_FACTOR; // Slightly reduced max size
         particleSpeedMin = 0.5 / TARGET_FRAME_DURATION; // Slower, lingering particles
         particleSpeedMax = 2 / TARGET_FRAME_DURATION;
         particleLife = 90 * TARGET_FRAME_DURATION; // Reduced life for fireball effect (1.5 seconds)
@@ -3616,7 +3679,7 @@
 
     function initStars() {
       const settings = qualitySettings[currentQualityLevel];
-      const targetStarCount = settings.starCount;
+      const targetStarCount = settings.starCount; // Star count is not scaled, but their size is handled in Star constructor
 
       // Adjust existing stars or add new ones
       while (stars.length < targetStarCount) {
@@ -3671,7 +3734,7 @@
       
       let x, y;
       const edge = Math.floor(random(0, 4)); // 0: top, 1: right, 2: bottom, 3: left
-      const offset = size * 1.5; // Spawn a bit further off-screen
+      const offset = size * 1.5 * SCALE_FACTOR; // Spawn a bit further off-screen
 
       switch (edge) {
         case 0: // Top
@@ -3713,8 +3776,8 @@
       const size = random(MIN_ASTEROID_SIZE, MAX_ASTEROID_SIZE);
       const speed = random(0.5, 1.0) / TARGET_FRAME_DURATION;
       // Random on-screen position
-      const x = random(size, width - size);
-      const y = random(size, height - size);
+      const x = random(size * SCALE_FACTOR, width - size * SCALE_FACTOR);
+      const y = random(size * SCALE_FACTOR, height - size * SCALE_FACTOR);
       // Random velocity in any direction
       const angle = random(0, Math.PI * 2);
       const vx = Math.cos(angle) * speed;
@@ -3763,8 +3826,6 @@
       const now = Date.now();
       const frameStart = performance.now(); // Start measuring total frame time for this frame
 
-      // Update stats (Elements and FPS) every frame
-      statsDiv.innerHTML = `Elements: ${stars.length + defenders.length + asteroids.length + ufos.length + activeParticles.length + explodingUfoParts.length + nukes.length}<br>FPS: ${fps}`;
 
       // If paused, only update FPS and stats, then request next frame and return
       if (isPaused) {
@@ -3789,7 +3850,7 @@
       stars.forEach(star => star.update(deltaTime)); // Pass deltaTime
       accumulatedPerformanceData.stars += (performance.now() - sectionStart);
 
-      // Update date/time display position
+      // Update date/time display position ONLY if it's visible
       if (isDateTimeVisible) {
           // Update orbit center drift direction periodically
           if (now - lastDateTimeOrbitCenterDirectionChangeTime > dateTimeOrbitCenterDirectionChangeInterval) {
@@ -3803,16 +3864,26 @@
           dateTimeOrbitCenterX += dateTimeOrbitCenterVx * deltaTime;
           dateTimeOrbitCenterY += dateTimeOrbitCenterVy * deltaTime;
 
-          // Clamp orbit center within a larger boundary to keep it on screen
-          const boundaryX = width * 0.1; // 10% margin from edges
-          const boundaryY = height * 0.1;
-          if (dateTimeOrbitCenterX < -boundaryX || dateTimeOrbitCenterX > width + boundaryX) {
-              dateTimeOrbitCenterVx *= -1; // Reverse X velocity
-              dateTimeOrbitCenterX = Math.max(-boundaryX, Math.min(width + boundaryX, dateTimeOrbitCenterX)); // Clamp
+          // Clamp orbit center within bounds, ensuring the entire orbit stays on screen
+          // The orbit center must be at least dateTimeOrbitRadius from any edge.
+          const minX = dateTimeOrbitRadius;
+          const maxX = width - dateTimeOrbitRadius;
+          const minY = dateTimeOrbitRadius;
+          const maxY = height - dateTimeOrbitRadius;
+
+          if (dateTimeOrbitCenterX < minX) {
+              dateTimeOrbitCenterVx = Math.abs(dateTimeOrbitCenterVx); // Bounce right
+              dateTimeOrbitCenterX = minX; // Clamp
+          } else if (dateTimeOrbitCenterX > maxX) {
+              dateTimeOrbitCenterVx = -Math.abs(dateTimeOrbitCenterVx); // Bounce left
+              dateTimeOrbitCenterX = maxX; // Clamp
           }
-          if (dateTimeOrbitCenterY < -boundaryY || dateTimeOrbitCenterY > height + boundaryY) {
-              dateTimeOrbitCenterVy *= -1; // Reverse Y velocity
-              dateTimeOrbitCenterY = Math.max(-boundaryY, Math.min(height + boundaryY, dateTimeOrbitCenterY)); // Clamp
+          if (dateTimeOrbitCenterY < minY) {
+              dateTimeOrbitCenterVy = Math.abs(dateTimeOrbitCenterVy); // Bounce down
+              dateTimeOrbitCenterY = minY; // Clamp
+          } else if (dateTimeOrbitCenterY > maxY) {
+              dateTimeOrbitCenterVy = -Math.abs(dateTimeOrbitCenterVy); // Bounce up
+              dateTimeOrbitCenterY = maxY; // Clamp
           }
 
           // Update orbital angle
@@ -3973,16 +4044,17 @@
     }
 
       // Nuke availability logic
-      // 'now' is already defined at the beginning of the function, no need to re-assign
-      if (!nukeAvailable && now - lastNukeFiredTime >= nukeCooldown) {
+      if (now >= nukeNextAvailableTime) { // Nuke is ready
           nukeAvailable = true;
-          nukeButton.textContent = 'Nuke: Ready';
-          nukeButton.classList.remove('bg-gray-900/50', 'text-gray-300', 'hover:bg-gray-800/70');
-          nukeButton.classList.add('bg-red-800/50', 'text-red-200', 'hover:bg-red-700/70');
+          nukeButton.textContent = 'Nuke'; // Keep text simple
+          nukeButton.classList.add('nuke-ready-pulse'); // Add pulsation class
           nukeButton.disabled = false;
-      } else if (!nukeAvailable) {
-          const remainingTime = Math.ceil((nukeCooldown - (now - lastNukeFiredTime)) / 1000);
-          nukeButton.textContent = `Nuke: Cooldown (${remainingTime}s)`;
+      } else { // Nuke is on cooldown
+          nukeAvailable = false; // Ensure this is false
+          const remainingTimeMs = nukeNextAvailableTime - now;
+          const remainingSeconds = Math.max(0, Math.ceil(remainingTimeMs / 1000)); 
+          nukeButton.textContent = `Nuke: Cooldown (${remainingSeconds}s)`; // Show timer with label
+          nukeButton.classList.remove('nuke-ready-pulse'); // Remove pulsation class
           nukeButton.disabled = true;
       }
 
@@ -3996,23 +4068,28 @@
       //     nukeButton.disabled = false;
       // }
 
-      // Update total frame time for this frame
-      accumulatedPerformanceData.totalFrameTime += (performance.now() - frameStart);
+      // Accumulate overall update time for this frame
+      accumulatedPerformanceData.overallUpdateTime += (performance.now() - frameStart);
       frameCounterForPerf++;
 
       // Update and display performance stats periodically
       if (isPerfStatsVisible && now - lastPerfStatsUpdateTime >= PERF_UPDATE_INTERVAL) {
           let perfHtml = '<h3>Perf (ms/frame avg over 5s)</h3>';
           if (frameCounterForPerf > 0) { // Avoid division by zero
-              const avgFrameTime = accumulatedPerformanceData.totalFrameTime / frameCounterForPerf;
+              const avgOverallUpdateTime = accumulatedPerformanceData.overallUpdateTime / frameCounterForPerf;
 
               // Create a temporary object for displaying averages
               const currentAverages = {};
+              let totalMeasuredLogicTime = 0; // Sum of all measured categories for the interval
               for (const key in accumulatedPerformanceData) {
-                  if (key !== 'totalFrameTime') {
-                      currentAverages[key] = accumulatedPerformanceData[key] / frameCounterForPerf;
+                  if (key !== 'overallUpdateTime') { // Exclude overallUpdateTime from category sum
+                      const avg = accumulatedPerformanceData[key] / frameCounterForPerf;
+                      currentAverages[key] = avg;
+                      totalMeasuredLogicTime += accumulatedPerformanceData[key]; // Sum raw accumulated values
                   }
               }
+              const avgMeasuredLogicTime = totalMeasuredLogicTime / frameCounterForPerf;
+              const avgUnmeasuredJsOverhead = avgOverallUpdateTime - avgMeasuredLogicTime;
 
               // Sort categories by their average time spent, descending
               const sortedCategories = Object.keys(currentAverages)
@@ -4023,7 +4100,7 @@
                   let count = 0;
                   // Get the count for each category
                   switch(key) {
-                      case 'stars': count = stars.length; break; // Now reports the actual number of active star divs
+                      case 'stars': count = stars.length; break;
                       case 'defenders': count = defenders.length; break;
                       case 'asteroids': count = asteroids.length; break;
                       case 'lasers': count = lasers.length; break;
@@ -4036,8 +4113,12 @@
                   totalDomObjects += count;
                   perfHtml += `${key}: ${currentAverages[key].toFixed(2)} ms (${count})<br>`;
               });
-              perfHtml += `Total Frame Time: ${avgFrameTime.toFixed(2)} ms<br>`;
-              perfHtml += `Total DOM Objects: ${totalDomObjects}`;
+              perfHtml += `FPS: ${fps}<br>`; // Add FPS
+              perfHtml += `Total DOM Objects: ${totalDomObjects}<br>`; // Add total DOM objects
+              perfHtml += `---<br>`;
+              perfHtml += `Total JS Update Time: ${avgOverallUpdateTime.toFixed(2)} ms<br>`;
+              perfHtml += `Measured Logic Time: ${avgMeasuredLogicTime.toFixed(2)} ms<br>`;
+              perfHtml += `Unmeasured JS Overhead: ${avgUnmeasuredJsOverhead.toFixed(2)} ms<br>`;
           } else {
               perfHtml += `No frames recorded in last ${PERF_UPDATE_INTERVAL / 1000}s`;
           }
@@ -4079,7 +4160,7 @@
       const targetY = event.clientY;
 
       // Define the four corner origins, now slightly off-screen
-      const offset = 50; // Pixels to move off-screen
+      const offset = 50 * SCALE_FACTOR; // Pixels to move off-screen
       const origins = [
         { x: -offset, y: -offset },             // Top-left
         { x: width + offset, y: -offset },         // Top-right
@@ -4129,7 +4210,7 @@
 
         // Nuke always fires from the bottom center of the screen
         const startX = width / 2;
-        const startY = height + 50; // Start slightly off-screen bottom
+        const startY = height + 50 * SCALE_FACTOR; // Start slightly off-screen bottom
 
         let nuke = nukePool.pop();
         if (!nuke) {
@@ -4141,10 +4222,9 @@
         playSpatialSound(nukeLaunchBuffer, startX, 1.2); // Play nuke launch sound, louder
         
         nukeAvailable = false;
-        lastNukeFiredTime = Date.now();
-        nukeButton.textContent = 'Nuke: Fired!';
-        nukeButton.classList.remove('bg-red-800/50', 'text-red-200', 'hover:bg-red-700/70');
-        nukeButton.classList.add('bg-gray-900/50', 'text-gray-300', 'hover:bg-gray-800/70');
+        nukeNextAvailableTime = Date.now() + nukeCooldown; // Set next available time
+        nukeButton.textContent = 'Nuke'; // Keep text simple
+        nukeButton.classList.remove('nuke-ready-pulse'); // Remove pulsation class
         nukeButton.disabled = true; // Disable immediately
     });
 
