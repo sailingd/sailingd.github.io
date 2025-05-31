@@ -398,8 +398,9 @@
     let lastAsteroidSpawnTime = 0;
     let lastUfoSpawnTime = 0;
 
-    const MIN_ASTEROID_SIZE = 25 * SCALE_FACTOR; // Minimum size before an asteroid vaporizes
-    const MAX_ASTEROID_SIZE = 80 * SCALE_FACTOR;
+    const MIN_ASTEROID_SIZE = 40 * SCALE_FACTOR; // Minimum size before an asteroid vaporizes (increased)
+    const MIN_ASTEROID_SIZE_FOR_SPLIT = 20 * SCALE_FACTOR; // Minimum size for an asteroid to split into smaller pieces
+    const MAX_ASTEROID_SIZE = 100 * SCALE_FACTOR; // Maximum size (increased)
     const ASTEROID_MAX_IRREGULARITY = 0.15; // Max irregularity factor used in generateIrregularPolygon (reduced for rounder asteroids)
     const ASTEROID_STROKE_WIDTH = 2 * SCALE_FACTOR; // Stroke width used for asteroid body
 
@@ -501,12 +502,11 @@
         }
 
         if (ctx.state !== 'running') {
-            // If context is not running, try to resume it.
-            // The nuke button click handler already attempts to resume the context.
-            // If it's still suspended here, it means a user gesture hasn't fully activated it yet.
-            // We'll let the next frame or user interaction handle the resume.
+            // If context is not running, warn but do not return.
+            // This allows the sound source to be created and connected.
+            // If the context resumes shortly after (e.g., due to a pending resume() call),
+            // the sound might still play.
             console.warn('AudioContext not running, sound might not play immediately.');
-            return;
         }
 
         const source = ctx.createBufferSource();
@@ -646,13 +646,21 @@
     function toggleMute() {
         const ctx = getAudioContext();
         if (ctx.state === 'running') {
-            ctx.suspend();
-            isMuted = true;
-            muteToggleBtn.textContent = 'Mute: On';
+            ctx.suspend().then(() => {
+                console.log('AudioContext suspended.');
+                isMuted = true;
+                muteToggleBtn.textContent = 'Mute: On';
+            }).catch(e => {
+                console.error('Failed to suspend AudioContext:', e);
+            });
         } else if (ctx.state === 'suspended') {
-            ctx.resume();
-            isMuted = false;
-            muteToggleBtn.textContent = 'Mute: Off';
+            ctx.resume().then(() => {
+                console.log('AudioContext resumed.');
+                isMuted = false;
+                muteToggleBtn.textContent = 'Mute: Off';
+            }).catch(e => {
+                console.error('Failed to resume AudioContext:', e);
+            });
         }
     }
 
@@ -2235,8 +2243,8 @@
         hitFireball.reset(impactX, impactY, hitFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, hitFireballFinalSize, 'visual'); // Removed durationMs
         activeFireballs.push(hitFireball);
 
-        // Create sparks at the impact point, inheriting asteroid's velocity
-        createExplosion(impactX, impactY, this.size * SCALE_FACTOR, 'spark', this.vx, this.vy);
+        // Create sparks at the impact point, inheriting asteroid's velocity, and flying back along the laser angle
+        createExplosion(impactX, impactY, this.size * SCALE_FACTOR, 'spark', this.vx, this.vy, laserAngle);
 
         // Only add the starburst crack on the first hit
         if (!this.hasStarburstCrack) {
@@ -2268,7 +2276,7 @@
 
         playSpatialSound(explosionBuffer, this.x, 1, finalPitch); 
         // Explosion particles should inherit asteroid's velocity
-        createExplosion(this.x, this.y, this.size * SCALE_FACTOR, 'explosion', this.vx, this.vy); 
+        createExplosion(this.x, this.y, this.size * SCALE_FACTOR, 'explosion', this.vx, this.vy);
 
         let fireball = fireballPool.pop();
         if (!fireball) {
@@ -2293,7 +2301,7 @@
         }
 
         const newSize = this.size * 0.6; // Asteroids split into 60% of their original size
-        if (!isNukeHit && newSize >= MIN_ASTEROID_SIZE) {
+        if (!isNukeHit && newSize >= MIN_ASTEROID_SIZE_FOR_SPLIT) { // Use new constant for splitting
           // Calculate spawn offset for the two new asteroids
           const spawnOffsetMagnitude = newSize * 0.8; // Offset by a factor of the new asteroid's size
           const initialSpawnAngle = random(0, Math.PI * 2); // Random angle for the first asteroid's offset
@@ -2621,7 +2629,8 @@
                 const impactX = this.actualTarget.x;
                 const impactY = this.actualTarget.y;
                 this.actualTarget.takeDamage(this.damage, this.angle, impactX, impactY); // Pass UFO's center as impact coordinates
-                createExplosion(impactX, impactY, this.actualTarget.size, 'spark'); // Use UFO's center for explosion
+                // Create sparks at the impact point, flying back along the laser angle
+                createExplosion(impactX, impactY, this.actualTarget.size, 'spark', 0, 0, this.angle); // UFOs don't have parentVx/Vy for sparks
                 this.hasDamaged = true;
             }
 
@@ -3605,8 +3614,9 @@
      * @param {string} type - Type of particles ('explosion' or 'spark').
      * @param {number} [parentVx=0] - Inherited velocity X from the parent object.
      * @param {number} [parentVy=0] - Inherited velocity Y from the parent object.
+     * @param {number} [incomingAngle=null] - The angle of the incoming shot (for sparks).
      */
-    function createExplosion(x, y, baseSize, type = 'explosion', parentVx = 0, parentVy = 0) {
+    function createExplosion(x, y, baseSize, type = 'explosion', parentVx = 0, parentVy = 0, incomingAngle = null) {
       const settings = qualitySettings[currentQualityLevel];
       let numParticles;
       let particleSizeMin, particleSizeMax;
@@ -3620,7 +3630,7 @@
         particleSpeedMin = 3 / TARGET_FRAME_DURATION; // Increased speed
         particleSpeedMax = 8 / TARGET_FRAME_DURATION; // Increased speed
         particleLife = 30 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Reduced life to 0.5 seconds, scaled
-      } else if (type === 'spark') { // Corrected to else if
+      } else if (type === 'spark') {
         numParticles = settings.sparkNumParticles;
         particleSizeMin = baseSize * 0.05 * SCALE_FACTOR; // Increased for more noticeable sparks
         particleSizeMax = baseSize * 0.15 * SCALE_FACTOR; // Increased for more noticeable sparks
@@ -3665,8 +3675,17 @@
             particleElement.setAttribute('fill', `rgb(255, 165, 0)`);
         }
         
-        const angle = random(0, Math.PI * 2);
-        const speed = random(particleSpeedMin, particleSpeedMax);
+        let angle, speed;
+        if (type === 'spark' && incomingAngle !== null) {
+            // Sparks fly back along the incoming angle
+            angle = incomingAngle + Math.PI + random(-Math.PI / 8, Math.PI / 8); // Reverse direction with some spread
+            speed = random(particleSpeedMin, particleSpeedMax);
+        } else {
+            // Random angle for other particle types
+            angle = random(0, Math.PI * 2);
+            speed = random(particleSpeedMin, particleSpeedMax);
+        }
+
         const vx = Math.cos(angle) * speed + parentVx; // Add parent's velocity
         const vy = Math.sin(angle) * speed + parentVy; // Add parent's velocity
 
