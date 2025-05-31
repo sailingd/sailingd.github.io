@@ -5,6 +5,9 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  html {
+    color-scheme: only light !important; /* Prevent browser auto dark mode */
+  }
   body {
     margin: 0;
     overflow: hidden;
@@ -68,7 +71,7 @@
     bottom: 16px; /* 4 units from bottom */
     left: 16px;  /* 4 units from left */
     z-index: 9999; /* Very high z-index to ensure visibility */
-    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent dark background */
+    background-color: rgba(0, 0, 0, 0.4); /* More transparent dark background */
     padding: 10px;
     border-radius: 10px;
     display: flex; /* From Tailwind */
@@ -77,16 +80,16 @@
   }
   #controls button {
     /* Basic button styling to ensure they are visible */
-    padding: 8px 16px;
+    padding: 8px 10px; /* Reduced horizontal padding for less width */
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: #e0e0e0;
-    background-color: rgba(50, 50, 50, 0.7);
+    background-color: rgba(50, 50, 50, 0.4); /* More transparent button background */
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
   }
   #controls button:hover {
-    background-color: rgba(70, 70, 70, 0.9);
+    background-color: rgba(70, 70, 70, 0.6); /* Adjusted hover transparency */
     border-color: rgba(255, 255, 255, 0.5);
   }
 
@@ -100,11 +103,12 @@
     border-radius: 8px; /* Slightly rounded corners for a modern look */
     background-color: rgba(255, 0, 0, 0.4); /* More transparent red background */
     color: white;
-    font-size: 1.2em;
+    font-size: 1em; /* Reduced font size */
     font-weight: bold;
     border: 2px solid rgba(255, 255, 255, 0.5);
     cursor: pointer;
     display: flex;
+    flex-direction: column; /* Arrange items vertically */
     justify-content: center;
     align-items: center;
     text-align: center;
@@ -150,18 +154,18 @@
   <svg id="spaceCanvas" width="100%" height="100%">
     <defs>
       <linearGradient id="userLaserGradient" x1="0%" y1="50%" x2="100%" y2="50%">
-        <stop offset="0%" stop-color="rgba(0, 255, 0, 0.1)"/>
-        <stop offset="70%" stop-color="rgba(100, 255, 100, 0.8)"/>
-        <stop offset="100%" stop-color="rgba(0, 255, 0, 1)"/>
+        <stop offset="0%" stop-color="rgba(0, 255, 0, 0)"/> <!-- Fully transparent at the tail -->
+        <stop offset="50%" stop-color="rgba(100, 255, 100, 1)"/> <!-- Bright center -->
+        <stop offset="100%" stop-color="rgba(0, 255, 0, 1)"/> <!-- Fully opaque green at the head -->
       </linearGradient>
       <linearGradient id="satelliteLaserGradient" x1="0%" y1="50%" x2="100%" y2="50%">
-        <stop offset="0%" stop-color="rgba(255, 0, 0, 0.5)"/>
-        <stop offset="50%" stop-color="rgba(255, 100, 100, 1)"/>
-        <stop offset="100%" stop-color="rgba(255, 0, 0, 0.5)"/>
+        <stop offset="0%" stop-color="rgba(255, 0, 0, 0.3)"/> <!-- More transparent red at ends -->
+        <stop offset="50%" stop-color="rgba(255, 255, 255, 1)"/> <!-- Brightest white in center -->
+        <stop offset="100%" stop-color="rgba(255, 0, 0, 0.3)"/> <!-- More transparent red at ends -->
       </linearGradient>
       <filter id="laserGlow" x="-50%" y="-50%" width="200%" height="200%">
           <!-- Simplified for performance, especially for particles -->
-          <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="rgba(0, 255, 0, 0.6)"/>
+          <feDropShadow dx="0" dy="0" stdDeviation="30" flood-color="rgba(0, 255, 0, 0.6)"/>
       </filter>
       <!-- Generic glow filter for cracks -->
       <filter id="crackGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
@@ -197,6 +201,14 @@
         <stop offset="80%" stop-color="rgba(200, 50, 0, 0.1)"/>   <!-- Reduced opacity -->
         <stop offset="100%" stop-color="rgba(100, 0, 0, 0)"/>
       </radialGradient>
+      <!-- Brighter Fireball Gradient for UFO Explosions -->
+      <radialGradient id="ufoExplosionFireballGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+        <stop offset="0%" stop-color="rgba(255, 255, 255, 1)"/>    <!-- Pure white, fully opaque -->
+        <stop offset="10%" stop-color="rgba(255, 255, 150, 1)"/>   <!-- Bright yellow, fully opaque -->
+        <stop offset="30%" stop-color="rgba(255, 180, 0, 0.9)"/>   <!-- Bright orange, high opacity -->
+        <stop offset="60%" stop-color="rgba(255, 80, 0, 0.7)"/>    <!-- Red-orange, medium opacity -->
+        <stop offset="100%" stop-color="rgba(100, 0, 0, 0)"/>      <!-- Transparent red -->
+      </radialGradient>
       <!-- Crack Gradient (Bright Yellow center, Red edges) -->
       <radialGradient id="crackGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
         <stop offset="0%" stop-color="rgba(255, 255, 0, 1)"/>    <!-- Bright Yellow -->
@@ -230,6 +242,7 @@
     <g id="starsLayer"></g>
     <g id="gameplayLayer"></g>
     <g id="effectsLayer"></g>
+    <g id="nukeFlashLayer"></g> <!-- New layer specifically for the nuke flash -->
   </svg>
   <div id="dateTimeDisplay"></div> <!-- New div for date and time -->
   <div id="perfStats"></div> <!-- New div for performance stats -->
@@ -239,6 +252,11 @@
     <button id="pauseToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Pause: Off</button>
     <button id="dateTimeToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Date/Time: On</button> <!-- New button -->
     <button id="perfStatsToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Perf Stats: Off</button> <!-- New button -->
+    <div class="flex items-center space-x-2">
+      <label for="speedSlider" class="text-gray-300 text-sm">Speed:</label>
+      <input type="range" id="speedSlider" min="0" max="100" value="100" class="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+      <span id="speedValue" class="text-gray-300 text-sm">100%</span>
+    </div>
   </div>
 
   <button id="nukeButton" class="nuke-button" disabled>Nuke</button>
@@ -253,6 +271,8 @@
     const pauseToggleBtn = document.getElementById('pauseToggle'); // Get the new pause button
     const nukeButton = document.getElementById('nukeButton'); // Get the new nuke button
     const perfStatsToggleBtn = document.getElementById('perfStatsToggleBtn'); // New: Get perf stats toggle button
+    const speedSlider = document.getElementById('speedSlider'); // New: Get speed slider
+    const speedValueSpan = document.getElementById('speedValue'); // New: Get speed value display
 
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -262,6 +282,7 @@
     let starsLayer; // Reference to the SVG group for stars
     let gameplayLayer; // Reference to the SVG group for gameplay elements
     let effectsLayer; // Reference to the SVG group for effects
+    let nukeFlashLayer; // New: Reference to the SVG group for the nuke flash
 
     // The 'stars' array will now hold Star objects (SVG circle based)
     const stars = []; 
@@ -321,6 +342,7 @@
     // Game state variables
     let isMuted = false;
     let isPaused = false; // New pause state variable
+    let gameSpeedMultiplier = 1.0; // New: Global game speed multiplier (0.0 to 1.0)
 
     // Nuke specific variables
     let nukeAvailable = false; // Is a nuke ready to fire?
@@ -358,7 +380,15 @@
     // Define target frame rate and duration for consistent movement
     const TARGET_FPS = 60;
     const TARGET_FRAME_DURATION = 1000 / TARGET_FPS; // Milliseconds per frame at target FPS
-    const DEFENDER_LASER_SPEED_PX_PER_MS = 6.0; // Fixed speed for defender lasers (pixels per millisecond)
+    const DEFENDER_LASER_SPEED_PX_PER_MS = 4.0; // Fixed speed for defender lasers (pixels per millisecond)
+    const USER_LASER_SPEED_PX_PER_MS = 15.0; // Increased speed for user lasers (pixels per millisecond)
+    const USER_LASER_INITIAL_PULSE_LENGTH = 450; // Initial length of the user laser pulse (large up close) - Further increased for longer tail
+    const USER_LASER_POST_IMPACT_DURATION = 200; // Duration in ms the laser continues to be visible after impact
+    const ASTEROID_FADE_DURATION = 500; // ms, time for asteroid opacity to go from 1 to 0
+    const ASTEROID_POST_FADE_DURATION = 100; // ms, time asteroid remains in DOM after opacity is 0
+    const FIREBALL_INITIAL_SIZE_FACTOR = 0.5; // Initial radius of fireball is this factor of its final radius (1/2 of final)
+    const FIREBALL_EXPANSION_RATE_PX_PER_MS = 0.09; // Pixels per millisecond the fireball radius expands
+    const USER_LASER_OVERSHOOT_DISTANCE = 50 * SCALE_FACTOR; // How far the user laser visually extends past the click target
 
     const numInitialDefenders = 6; // Renamed from numInitialSatellites
     const numInitialAsteroids = 10;
@@ -481,7 +511,8 @@
 
         const source = ctx.createBufferSource();
         source.buffer = buffer;
-        source.playbackRate.value = pitchBend; // Apply pitch bend
+        // Apply gameSpeedMultiplier to playback rate
+        source.playbackRate.value = pitchBend * gameSpeedMultiplier; // Scale playback rate by game speed multiplier
 
         const panner = ctx.createPanner();
         panner.panningModel = 'HRTF'; // High-quality spatialization
@@ -529,67 +560,52 @@
         starCount: 300, // Reverted to original star count
         asteroidNumParticles: 15,
         sparkNumParticles: 8,
-        asteroidCrackSegments: [5, 10],
-        asteroidCrackSizeFactor: [0.1, 0.5],
         defenderFireInterval: [300, 1000],
-        laserLifeDefender: 200 * TARGET_FRAME_DURATION,
+        laserLifeDefender: 200 * TARGET_FRAME_DURATION, // This value is a base, scaled when used in Laser.reset
         laserTransitionDuration: '0.1s',
         laserGradient: true,
         laserShadow: true,
-        ufoCrackSegments: [2, 5],
-        ufoCrackSizeFactor: [0.05, 0.2],
         ufoMessageTransparency: true,
         ufoMessageShadow: true,
         ufoMessageTransition: '3s ease-in-out',
-        crackFinalOpacity: 0.7,
         particleAggregationGridSize: 50,
         particleAggregationThreshold: 8,
         aggregatedParticleEffectSize: 40,
-        aggregatedParticleEffectDuration: 600
+        aggregatedParticleEffectDuration: 600 / gameSpeedMultiplier // Scaled
       },
       'medium': {
         starCount: 150, // Reverted to original star count
         asteroidNumParticles: 8,
         sparkNumParticles: 5,
-        asteroidCrackSegments: [2, 4],
-        asteroidCrackSizeFactor: [0.08, 0.25],
         defenderFireInterval: [500, 1500],
-        laserLifeDefender: 150 * TARGET_FRAME_DURATION,
+        laserLifeDefender: 150 * TARGET_FRAME_DURATION, // This value is a base, scaled when used in Laser.reset
         laserTransitionDuration: '0.05s',
         laserGradient: true,
         laserShadow: true,
-        ufoCrackSegments: [1, 3],
-        ufoCrackSizeFactor: [0.04, 0.15],
         ufoMessageTransparency: true,
         ufoMessageShadow: true,
         ufoMessageTransition: '2s ease-in-out',
-        crackFinalOpacity: 0.8,
         particleAggregationGridSize: 70,
         particleAggregationThreshold: 6,
         aggregatedParticleEffectSize: 30,
-        aggregatedParticleEffectDuration: 500
+        aggregatedParticleEffectDuration: 500 / gameSpeedMultiplier // Scaled
       },
       'low': {
         starCount: 50, // Reverted to original star count
         asteroidNumParticles: 2,
         sparkNumParticles: 1,
-        asteroidCrackSegments: [1, 2],
-        asteroidCrackSizeFactor: [0.05, 0.2],
         defenderFireInterval: [800, 2000],
-        laserLifeDefender: 100 * TARGET_FRAME_DURATION,
+        laserLifeDefender: 100 * TARGET_FRAME_DURATION, // This value is a base, scaled when used in Laser.reset
         laserTransitionDuration: '0s',
         laserGradient: false,
         laserShadow: false,
-        ufoCrackSegments: [1, 2],
-        ufoCrackSizeFactor: [0.03, 0.1],
         ufoMessageTransparency: false,
         ufoMessageShadow: false,
         ufoMessageTransition: '0s',
-        crackFinalOpacity: 1,
         particleAggregationGridSize: 100,
         particleAggregationThreshold: 4,
         aggregatedParticleEffectSize: 20,
-        aggregatedParticleEffectDuration: 400
+        aggregatedParticleEffectDuration: 400 / gameSpeedMultiplier // Scaled
       }
     };
 
@@ -602,9 +618,15 @@
       // Reinitialize stars with new count
       initStars(); // Call initStars to handle star count and opacity updates
 
-      // Update defender fire intervals
+      // Update defender fire intervals and other time-based properties
       defenders.forEach(defender => {
-        defender.fireInterval = random(settings.defenderFireInterval[0], settings.defenderFireInterval[1]);
+        // Re-calculate fireInterval based on current quality settings and game speed
+        defender.fireInterval = random(settings.defenderFireInterval[0], settings.defenderFireInterval[1]) / gameSpeedMultiplier;
+        // Re-calculate other time-based properties as well
+        defender.thrustCooldown = 500 / gameSpeedMultiplier;
+        defender.rcsCooldown = 100 / gameSpeedMultiplier;
+        defender.thrustOnDuration = 1000 * SCALE_FACTOR / gameSpeedMultiplier;
+        defender.thrustOffDuration = 1000 * SCALE_FACTOR / gameSpeedMultiplier;
       });
     }
 
@@ -831,7 +853,8 @@
             if (!fireball) {
                 fireball = new FireballEffect();
             }
-            fireball.reset(coords.x, coords.y, settings.aggregatedParticleEffectSize, settings.aggregatedParticleEffectDuration, 'visual');
+            const aggregatedFireballFinalSize = settings.aggregatedParticleEffectSize;
+            fireball.reset(coords.x, coords.y, aggregatedFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, aggregatedFireballFinalSize, 'visual');
             activeFireballs.push(fireball);
             playSpatialSound(aggregationSoundBuffer, coords.x, 0.5); // Play subtle sound
         });
@@ -1084,7 +1107,8 @@
         // Destroy UFOs if within radius
         for (let i = ufos.length - 1; i >= 0; i--) {
             const currentUfo = ufos[i];
-            if (Math.hypot(currentUfo.x - centerX, currentUfo.y - centerY) < radius + currentUfo.size) {
+            // Only destroy if not already in the process of being destroyed
+            if (!currentUfo.isDestroyed && Math.hypot(currentUfo.x - centerX, currentUfo.y - centerY) < radius + currentUfo.size) {
                 currentUfo.health = 0; // Ensure it's destroyed
                 currentUfo.destroy(isNukeHit); // Pass isNukeHit to UFO destroy
             }
@@ -1093,7 +1117,8 @@
         // Destroy asteroids within radius
         for (let i = asteroids.length - 1; i >= 0; i--) {
             const asteroid = asteroids[i];
-            if (Math.hypot(asteroid.x - centerX, asteroid.y - centerY) < radius + asteroid.size) {
+            // Only destroy if not already in the process of being destroyed
+            if (!asteroid.isDestroyed && Math.hypot(asteroid.x - centerX, asteroid.y - centerY) < radius + asteroid.size) {
                 asteroid.health = 0; // Ensure it's destroyed
                 asteroid.destroy(isNukeHit); // Pass isNukeHit to asteroid destroy
             }
@@ -1190,7 +1215,7 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.size = random(25, 40) * SCALE_FACTOR; // Slightly larger size for more distinct shape
+        this.size = random(20, 50) * SCALE_FACTOR; // Increased size variation for more distinct shape
         // Convert velocities to per-millisecond for delta time scaling
         this.vx = 0; // Initial velocity X (will be controlled by AI)
         this.vy = 0; // Initial velocity Y (will be controlled by AI)
@@ -1198,7 +1223,8 @@
         this.vRotation = 0; // Initial rotational velocity (will be controlled by AI)
         
         const settings = qualitySettings[currentQualityLevel];
-        this.fireInterval = random(settings.defenderFireInterval[0], settings.defenderFireInterval[1]); // Renamed from satelliteFireInterval
+        // Scale fireInterval by gameSpeedMultiplier
+        this.fireInterval = random(settings.defenderFireInterval[0], settings.defenderFireInterval[1]) / gameSpeedMultiplier;
         this.lastFireTime = Date.now() + random(0, this.fireInterval); // Stagger initial firing
 
         this.thrustForce = 0.005 / TARGET_FRAME_DURATION; // Acceleration per frame
@@ -1206,14 +1232,14 @@
         this.maxSpeed = 3.0 / TARGET_FRAME_DURATION; // Max linear speed
         this.maxRotationSpeed = 0.5 / TARGET_FRAME_DURATION; // Max rotational speed
 
-        this.thrustCooldown = 500; // Cooldown for main thruster (ms)
-        this.rcsCooldown = 100; // Minimum time between RCS impulses (ms)
+        this.thrustCooldown = 500 / gameSpeedMultiplier; // Cooldown for main thruster (ms), scaled
+        this.rcsCooldown = 100 / gameSpeedMultiplier; // Minimum time between RCS impulses (ms), scaled
         this.lastThrustTime = 0; // When main thrust was last *activated*
         this.lastRcsImpulseTime = 0; // When the last RCS impulse was applied
 
         this.isThrusting = false; // Is the main thruster currently active?
-        this.thrustOnDuration = 1000 * SCALE_FACTOR; // How long main thruster stays on (ms)
-        this.thrustOffDuration = 1000 * SCALE_FACTOR; // How long main thruster stays off (ms) - Reduced for more frequent thrusting
+        this.thrustOnDuration = 1000 * SCALE_FACTOR / gameSpeedMultiplier; // How long main thruster stays on (ms), scaled
+        this.thrustOffDuration = 1000 * SCALE_FACTOR / gameSpeedMultiplier; // How long main thruster stays off (ms) - Reduced for more frequent thrusting, scaled
         this.lastThrustToggleTime = 0; // When thrust state last changed (on to off, or off to on)
 
         this.roamingTargetX = random(width * 0.2, width * 0.8); // Initial roaming target
@@ -1394,7 +1420,7 @@
         this.element.appendChild(this.mainThrusterRightElement);
 
         // --- RCS Thruster Fire (Triangular) ---
-        const rcsSize = this.size * 0.3 * SCALE_FACTOR; // Increased size for bigger triangles
+        const rcsSize = this.size * 0.3 * SCALE_FACTOR; // Reverted to original size for RCS thruster jets
         // Position RCS thrusters closer to the top of the A-shape, on the "shoulders"
         const rcsOffsetFrontX = baseWidth / 2 * random(0.5, 0.7); // Closer to the center line
         const rcsOffsetFrontY = tipY + this.size * random(0.1, 0.3) * SCALE_FACTOR; // Slightly below the tip
@@ -1426,7 +1452,7 @@
         this.element.appendChild(this.rcsRightElement);
       }
 
-      update(deltaTime) {
+      update(scaledDeltaTime) {
         const now = Date.now();
 
         // --- Movement AI ---
@@ -1552,9 +1578,9 @@
         }
 
         // Update position and rotation based on velocities
-        this.x += this.vx * deltaTime; // Scaled by delta time
-        this.y += this.vy * deltaTime; // Scaled by delta time
-        this.rotation += this.vRotation * deltaTime; // Scaled by delta time
+        this.x += this.vx * scaledDeltaTime; // Scaled by delta time
+        this.y += this.vy * scaledDeltaTime; // Scaled by delta time
+        this.rotation += this.vRotation * scaledDeltaTime; // Scaled by delta time
 
         // Wrap around horizontally
         if (this.x < -this.size) this.x = width + this.size;
@@ -1574,13 +1600,15 @@
         if (now - this.lastFireTime > this.fireInterval) {
           this.lastFireTime = now;
 
-          // Prioritize UFOs if present
-          if (ufos.length > 0) {
+          // Prioritize UFOs if present and not destroyed
+          const activeUFOs = ufos.filter(ufo => !ufo.isDestroyed);
+          if (activeUFOs.length > 0) {
             // Target a random active UFO
-            this.target = ufos[Math.floor(random(0, ufos.length))];
+            this.target = activeUFOs[Math.floor(random(0, activeUFOs.length))];
           } else {
-            // Filter for on-screen asteroids that are well within the screen bounds.
-            const onScreenAsteroids = asteroids.filter(a => 
+            // Filter for on-screen asteroids that are well within the screen bounds and not destroyed.
+            const onScreenAsteroids = asteroids.filter(a =>
+                !a.isDestroyed && // Ensure asteroid is not destroyed
                 a.x > a.size * 2 && a.x < width - a.size * 2 && // At least 2x asteroid size away from horizontal edges
                 a.y > a.size * 2 && a.y < height - a.size * 2   // At least 2x asteroid size away from vertical edges
             );
@@ -1594,7 +1622,7 @@
                 const speed = Math.hypot(asteroid.vx, asteroid.vy);
                 // Threat score: smaller size and higher speed contribute more
                 // (MAX_ASTEROID_SIZE - asteroid.size + 1) ensures score is positive and smaller asteroids get higher scores
-                const threatScore = (MAX_ASTEROID_SIZE - asteroid.size + 1) * speed; 
+                const threatScore = (MAX_ASTEROID_SIZE - asteroid.size + 1) * speed;
 
                 if (threatScore > highestThreatScore) {
                   highestThreatScore = threatScore;
@@ -1688,13 +1716,17 @@
      * @param {string} [inheritedGradientId=null] - Optional: Gradient ID to inherit from parent.
      */
     class Asteroid {
-      constructor(x, y, size, health = size, vx = 0, vy = 0, vRotation = 0, inheritedGradientId = null) {
+      constructor(x, y, size, health = size, vx = 0, vy = 0, vRotation = 0, inheritedGradientId = null, insertBeforeElement = null) {
         this.id = `asteroid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; // Unique ID for clipping
         this.x = x;
         this.y = y;
         this.size = size;
         this.initialHealth = health; // Store initial health for crack calculation
         this.health = health;
+
+        this.isDestroyed = false; // New flag: true when destruction animation starts
+        this.destroyStartTime = 0; // New: Timestamp when destruction animation began
+        this.animationDuration = 0; // New: Duration of the destruction animation
 
         this.vx = vx;
         this.vy = vy;
@@ -1704,10 +1736,12 @@
         this.element = createSVGElement('g'); // Group for asteroid and craters
         this.element.setAttribute('class', 'asteroid');
         
-        // Default transition is only for opacity (used if an asteroid is removed for other reasons, though currently not the case)
-        this.element.style.transition = 'opacity 0.5s ease-out'; 
-        
-        gameplayLayer.appendChild(this.element); // Append to gameplay layer
+        // Append to gameplayLayer, inserting before a specified element if provided
+        if (insertBeforeElement && insertBeforeElement.parentNode === gameplayLayer) {
+            gameplayLayer.insertBefore(this.element, insertBeforeElement);
+        } else {
+            gameplayLayer.appendChild(this.element); // Default to append if no specific element or parent mismatch
+        }
 
         // Select asteroid gradient: inherit if provided, otherwise random
         const asteroidGradients = ['asteroidGradientGrey', 'asteroidGradientBrown', 'asteroidGradientRed'];
@@ -1719,9 +1753,8 @@
         this.drawAsteroid(); 
         this.updatePosition(); 
 
-        this.activeCrackEffects = []; 
-        this.damageStagesHit = 0; 
-        this.damageThresholds = [0.75, 0.50, 0.25]; 
+        this.activeCrackEffects = []; // Will only hold the single starburst crack effect
+        this.hasStarburstCrack = false; // New flag to track if starburst crack has been added
       }
 
       updatePosition() {
@@ -2004,13 +2037,10 @@
           };
       }
 
-      addDamageCracks(numNewCracks, impactX = null, impactY = null, crackType = 'linear') { // Added impactX, impactY, crackType
+      addDamageCracks(impactX = null, impactY = null) { // Removed numNewCracks and crackType parameters
           if (!this.crackGroup) return;
-          const settings = qualitySettings[currentQualityLevel];
-          // Determine the final color for the crack, which is the darkest part of the asteroid
           // Determine the final color for the crack, which is the darkest part of the asteroid
           const finalCrackColor = this.getDarkenedColorForCrater(this.gradientId, random(0.4, 0.6)); // Use a higher darken factor for the "darkest part"
-          const finalCrackOpacity = 1; // Ensure crack is fully opaque after glow fades
 
           // Convert global impact coordinates to asteroid's local coordinates
           // This is crucial because the asteroid's group is translated and rotated.
@@ -2028,226 +2058,169 @@
               localImpactY = translatedX * Math.sin(radRotation) + translatedY * Math.cos(radRotation);
           }
 
-          for (let i = 0; i < numNewCracks; i++) {
-              // The final shaded color for the crack, which will be visible after the glow fades
-              const shadedCrackColor = this.getDarkenedColorForCrater(this.gradientId, random(0.4, 0.6)); 
-              const glowingCrackFadeDuration = 5000; // Duration for the glowing crack to fade out
+          // The final shaded color for the crack, which will be visible after the glow fades
+          const shadedCrackColor = this.getDarkenedColorForCrater(this.gradientId, random(0.4, 0.6)); 
+          const glowingCrackFadeDuration = 5000 / gameSpeedMultiplier; // Duration for the glowing crack to fade out, scaled
 
+          // Define offsets for 3D effect, scaling with asteroid size for a more shallow 3D effect
+          const offsetMagnitude = this.size * random(0.005, 0.015); // Offset scales with asteroid size
+          const offsetX = offsetMagnitude;
+          const offsetY = offsetMagnitude;
 
-              // Define offsets for 3D effect, scaling with asteroid size for a more shallow 3D effect
-              const offsetMagnitude = this.size * random(0.005, 0.015); // Offset scales with asteroid size
-              const offsetX = offsetMagnitude;
-              const offsetY = offsetMagnitude;
-              const lightOffsetX = -offsetMagnitude; // Opposite offset for highlight
-              const lightOffsetY = -offsetMagnitude;
+          let pathData = '';
 
-              let pathData = '';
-              let isCrackFilled = false;
+          // Starburst crack logic: create a filled polygon
+          const numRays = Math.floor(random(10, 20)); // Increased number of rays for more spikes
+          const maxRayLength = this.size * random(0.2, 0.5); // Max length of a ray
+          const innerRadiusFactor = random(0.3, 0.5); // How far in the "valley" points are
+          const starburstOffsetMagnitude = this.size * random(0.05, 0.1); // Offset from impact point towards center
+          
+          // Calculate the starburst origin: slightly offset from impact point towards asteroid center (0,0)
+          const distImpactToCenter = Math.hypot(localImpactX, localImpactY);
+          let starburstOriginX = localImpactX;
+          let starburstOriginY = localImpactY;
 
-              if (crackType === 'starburst' && impactX !== null && impactY !== null) {
-                  isCrackFilled = true;
-                  // Starburst crack logic: create a filled polygon
-                  const numRays = Math.floor(random(10, 20)); // Increased number of rays for more spikes
-                  const maxRayLength = this.size * random(0.2, 0.5); // Max length of a ray
-                  const innerRadiusFactor = random(0.3, 0.5); // How far in the "valley" points are
-                  const starburstOffsetMagnitude = this.size * random(0.05, 0.1); // Offset from impact point towards center
-                  
-                  // Calculate the starburst origin: slightly offset from impact point towards asteroid center (0,0)
-                  const distImpactToCenter = Math.hypot(localImpactX, localImpactY);
-                  let starburstOriginX = localImpactX;
-                  let starburstOriginY = localImpactY;
-
-                  if (distImpactToCenter > 0) { // Avoid division by zero if impact is at (0,0)
-                      const angleImpactToCenter = Math.atan2(localImpactY, localImpactX);
-                      starburstOriginX = localImpactX - starburstOffsetMagnitude * Math.cos(angleImpactToCenter);
-                      starburstOriginY = localImpactY - starburstOffsetMagnitude * Math.sin(angleImpactToCenter);
-                  }
-
-                  pathData = `M${starburstOriginX},${starburstOriginY}`; // Start at the center
-                  const initialOffsetAngle = random(0, Math.PI * 2); // Random initial rotation for the starburst
-                  const irregularityFactor = random(0.1, 0.3); // How much to offset points for irregularity
-
-                  for (let k = 0; k < numRays; k++) {
-                      // Outer point (peak of the ray)
-                      const angleOuter = (2 * Math.PI / numRays) * k + initialOffsetAngle;
-                      const outerX = starburstOriginX + maxRayLength * Math.cos(angleOuter);
-                      const outerY = starburstOriginY + maxRayLength * Math.sin(angleOuter);
-                      
-                      // Add random offset to outer points
-                      const outerOffsetX = random(-maxRayLength * irregularityFactor, maxRayLength * irregularityFactor);
-                      const outerOffsetY = random(-maxRayLength * irregularityFactor, maxRayLength * irregularityFactor);
-                      pathData += ` L${outerX + outerOffsetX},${outerY + outerOffsetY}`;
-
-                      // Inner point (valley between rays)
-                      const angleInner = (2 * Math.PI / numRays) * k + (Math.PI / numRays) + initialOffsetAngle;
-                      const innerX = starburstOriginX + (maxRayLength * innerRadiusFactor) * Math.cos(angleInner);
-                      const innerY = starburstOriginY + (maxRayLength * innerRadiusFactor) * Math.sin(angleInner);
-                      
-                      // Add random offset to inner points
-                      const innerOffsetX = random(-maxRayLength * irregularityFactor * 0.5, maxRayLength * irregularityFactor * 0.5); // Smaller offset for inner points
-                      const innerOffsetY = random(-maxRayLength * irregularityFactor * 0.5, maxRayLength * irregularityFactor * 0.5);
-                      pathData += ` L${innerX + innerOffsetX},${innerY + innerOffsetY}`;
-                  }
-                  pathData += ` Z`; // Close the polygon
-
-                  // Shaded crack (bottom layer)
-                  const shadedCrack = createSVGElement('path');
-                  shadedCrack.setAttribute('d', pathData);
-                  shadedCrack.setAttribute('fill', shadedCrackColor); // Solid shaded color
-                  shadedCrack.setAttribute('stroke', 'none');
-                  shadedCrack.setAttribute('transform', `translate(${offsetX}, ${offsetY})`);
-                  shadedCrack.setAttribute('opacity', settings.crackFinalOpacity); // Set final opacity for the shaded crack
-                  this.crackGroup.appendChild(shadedCrack);
-
-                  // Glowing crack (top layer)
-                  const glowingCrack = createSVGElement('path');
-                  glowingCrack.setAttribute('d', pathData);
-                  glowingCrack.setAttribute('fill', 'url(#crackGradient)'); // Gradient fill
-                  glowingCrack.setAttribute('stroke', 'none');
-                  glowingCrack.setAttribute('transform', `translate(${offsetX}, ${offsetY})`);
-                  glowingCrack.setAttribute('filter', 'url(#crackGlowFilter)'); // Apply the shared glow filter
-                  // Opacity is managed by CrackEffect
-                  this.crackGroup.appendChild(glowingCrack);
-
-                  // Create sparks at the starburst origin
-                  const globalStarburstOrigin = this.getGlobalCoordinates(starburstOriginX, starburstOriginY);
-                  createExplosion(globalStarburstOrigin.x, globalStarburstOrigin.y, this.size * 0.1, 'spark');
-
-                  // Add CrackEffect for the glowing crack
-                  this.activeCrackEffects.push(new CrackEffect(
-                      glowingCrack,
-                      glowingCrackFadeDuration
-                  ));
-
-              } else { // Linear crack logic
-                  const crackWidth = random(1, 8); // Wider variation in stroke width for each crack
-                  const totalCrackLength = random(this.size * settings.asteroidCrackSizeFactor[0], this.size * settings.asteroidCrackSizeFactor[1]);
-                  const numSegments = Math.floor(random(settings.asteroidCrackSegments[0], settings.asteroidCrackSegments[1]));
-                  const segmentLength = totalCrackLength / numSegments;
-
-                  // Start point: near the edge of the asteroid
-                  const startAngle = random(0, Math.PI * 2);
-                  const startDist = this.size * random(0.7, 0.95); // Closer to the edge
-                  let currentX = startDist * Math.cos(startAngle);
-                  let currentY = startDist * Math.sin(startAngle);
-                  pathData = `M${currentX},${currentY}`;
-
-                  // Initial direction: generally towards the center, with some randomness
-                  let currentSegmentAngle = startAngle + Math.PI + random(-Math.PI / 4, Math.PI / 4); // Opposite to radial direction, plus wiggle
-
-                  for (let j = 0; j < numSegments; j++) {
-                      // Randomly perturb angle for next segment
-                      currentSegmentAngle += random(-Math.PI / 4, Math.PI / 4); // Increased deviation for more jaggedness
-
-                      const nextX = currentX + segmentLength * Math.cos(currentSegmentAngle);
-                      const nextY = currentY + segmentLength * Math.sin(currentSegmentAngle);
-
-                      // Check if the crack is going too far outside the asteroid's approximate bounds
-                      const distFromCenter = Math.hypot(nextX, nextY);
-                      // If it's trying to go too far out, redirect it inwards slightly or stop
-                      if (distFromCenter > this.size * (1 - ASTEROID_MAX_IRREGULARITY * 0.1)) {
-                          // Try to redirect inwards by adjusting the angle
-                          const angleToCenter = Math.atan2(-nextY, -nextX); // Angle from next point towards (0,0)
-                          currentSegmentAngle = angleToCenter + random(-Math.PI / 8, Math.PI / 8); // Redirect towards center with some wiggle
-                          // Recalculate next point with new angle
-                          const redirectedNextX = currentX + segmentLength * Math.cos(currentSegmentAngle);
-                          const redirectedNextY = currentY + segmentLength * Math.sin(currentSegmentAngle);
-                          // Only use if it actually brings it back inside or closer
-                          if (Math.hypot(redirectedNextX, redirectedNextY) < distFromCenter) {
-                              currentX = redirectedNextX;
-                              currentY = redirectedNextY;
-                          } else {
-                              // If redirection didn't help, or it's the first segment, just break to prevent it from going too far
-                              if (j > 0) break; 
-                          }
-                      } else {
-                          currentX = nextX;
-                          currentY = nextY;
-                      }
-                      pathData += ` L${currentX},${currentY}`;
-
-                      // Create sparks along the crack segments
-                      if (j % 2 === 0) { // Create a spark every other segment
-                          const globalSparkPos = this.getGlobalCoordinates(currentX, currentY);
-                          createExplosion(globalSparkPos.x, globalSparkPos.y, this.size * 0.05, 'spark'); // Small sparks
-                      }
-                  }
-                  
-                  // Shaded crack (bottom layer)
-                  const shadedCrack = createSVGElement('path');
-                  shadedCrack.setAttribute('d', pathData);
-                  shadedCrack.setAttribute('fill', 'none');
-                  shadedCrack.setAttribute('stroke', shadedCrackColor); // Solid shaded color
-                  shadedCrack.setAttribute('stroke-width', crackWidth);
-                  shadedCrack.setAttribute('transform', `translate(${offsetX}, ${offsetY})`);
-                  shadedCrack.setAttribute('opacity', settings.crackFinalOpacity); // Set final opacity for the shaded crack
-                  this.crackGroup.appendChild(shadedCrack);
-
-                  // Glowing crack (top layer)
-                  const glowingCrack = createSVGElement('path');
-                  glowingCrack.setAttribute('d', pathData);
-                  glowingCrack.setAttribute('fill', 'none');
-                  glowingCrack.setAttribute('stroke', 'url(#crackGradient)'); // Gradient stroke
-                  glowingCrack.setAttribute('stroke-width', crackWidth);
-                  glowingCrack.setAttribute('transform', `translate(${offsetX}, ${offsetY})`);
-                  glowingCrack.setAttribute('filter', 'url(#crackGlowFilter)'); // Apply the shared glow filter
-                  // Opacity is managed by CrackEffect
-                  this.crackGroup.appendChild(glowingCrack);
-
-                  // Add CrackEffect for the glowing crack
-                  this.activeCrackEffects.push(new CrackEffect(
-                      glowingCrack,
-                      glowingCrackFadeDuration
-                  ));
-              }
+          if (distImpactToCenter > 0) { // Avoid division by zero if impact is at (0,0)
+              const angleImpactToCenter = Math.atan2(localImpactY, localImpactX);
+              starburstOriginX = localImpactX - starburstOffsetMagnitude * Math.cos(angleImpactToCenter);
+              starburstOriginY = localImpactY - starburstOffsetMagnitude * Math.sin(angleImpactToCenter);
           }
+
+          pathData = `M${starburstOriginX},${starburstOriginY}`; // Start at the center
+          const initialOffsetAngle = random(0, Math.PI * 2); // Random initial rotation for the starburst
+          const irregularityFactor = random(0.1, 0.3); // How much to offset points for irregularity
+
+          for (let k = 0; k < numRays; k++) {
+              // Outer point (peak of the ray)
+              const angleOuter = (2 * Math.PI / numRays) * k + initialOffsetAngle;
+              const outerX = starburstOriginX + maxRayLength * Math.cos(angleOuter);
+              const outerY = starburstOriginY + maxRayLength * Math.sin(angleOuter);
+              
+              // Add random offset to outer points
+              const outerOffsetX = random(-maxRayLength * irregularityFactor, maxRayLength * irregularityFactor);
+              const outerOffsetY = random(-maxRayLength * irregularityFactor, maxRayLength * irregularityFactor);
+              pathData += ` L${outerX + outerOffsetX},${outerY + outerOffsetY}`;
+
+              // Inner point (valley between rays)
+              const angleInner = (2 * Math.PI / numRays) * k + (Math.PI / numRays) + initialOffsetAngle;
+              const innerX = starburstOriginX + (maxRayLength * innerRadiusFactor) * Math.cos(angleInner);
+              const innerY = starburstOriginY + (maxRayLength * innerRadiusFactor) * Math.sin(angleInner);
+              
+              // Add random offset to inner points
+              const innerOffsetX = random(-maxRayLength * irregularityFactor * 0.5, maxRayLength * irregularityFactor * 0.5); // Smaller offset for inner points
+              const innerOffsetY = random(-maxRayLength * irregularityFactor * 0.5, maxRayLength * irregularityFactor * 0.5);
+              pathData += ` L${innerX + innerOffsetX},${innerY + innerOffsetY}`;
+          }
+          pathData += ` Z`; // Close the polygon
+
+          // Shaded crack (bottom layer)
+          const shadedCrack = createSVGElement('path');
+          shadedCrack.setAttribute('d', pathData);
+          shadedCrack.setAttribute('fill', shadedCrackColor); // Solid shaded color
+          shadedCrack.setAttribute('stroke', 'none');
+          shadedCrack.setAttribute('transform', `translate(${offsetX}, ${offsetY})`);
+          shadedCrack.setAttribute('opacity', 1); // Set final opacity for the shaded crack
+          this.crackGroup.appendChild(shadedCrack);
+
+          // Glowing crack (top layer)
+          const glowingCrack = createSVGElement('path');
+          glowingCrack.setAttribute('d', pathData);
+          glowingCrack.setAttribute('fill', 'url(#crackGradient)'); // Gradient fill
+          glowingCrack.setAttribute('stroke', 'none');
+          glowingCrack.setAttribute('transform', `translate(${offsetX}, ${offsetY})`);
+          glowingCrack.setAttribute('filter', 'url(#crackGlowFilter)'); // Apply the shared glow filter
+          // Opacity is managed by CrackEffect
+          this.crackGroup.appendChild(glowingCrack);
+
+          // Create sparks at the starburst origin
+          const globalStarburstOrigin = this.getGlobalCoordinates(starburstOriginX, starburstOriginY);
+          createExplosion(globalStarburstOrigin.x, globalStarburstOrigin.y, this.size * 0.1, 'spark');
+
+          // Add CrackEffect for the glowing crack
+          this.activeCrackEffects.push(new CrackEffect(
+              glowingCrack,
+              glowingCrackFadeDuration
+          ));
       }
 
       update(deltaTime) {
+        // Always update position and rotation based on velocity, regardless of destruction state
         this.x += this.vx * deltaTime; 
         this.y += this.vy * deltaTime; 
         this.rotation += this.vRotation * deltaTime; 
 
-        if (this.x < -this.size) {
-          this.x = width + this.size;
-        }
-        else if (this.x > width + this.size) {
-          this.x = -this.size;
-        }
-        
-        if (this.y < -this.size) {
-          this.y = height + this.size;
-        }
-        else if (this.y > height + this.size) {
-          this.y = -this.size;
-        }
-
-        // Update and clean up crack effects
-        if (this.activeCrackEffects) {
-            for (let i = this.activeCrackEffects.length - 1; i >= 0; i--) {
-                const effect = this.activeCrackEffects[i];
-                if (effect.update()) { // If the effect is dead
-                    if (effect.element.parentNode === this.crackGroup) { // Ensure it's still a child
-                        this.crackGroup.removeChild(effect.element);
-                    }
-                    this.activeCrackEffects.splice(i, 1);
+        // Update and clean up crack effects (only one, the starburst glow)
+        // This loop will run for the single starburst crack effect.
+        for (let i = this.activeCrackEffects.length - 1; i >= 0; i--) {
+            const effect = this.activeCrackEffects[i];
+            if (effect.update()) { // If the effect is dead
+                if (effect.element.parentNode === this.crackGroup) { // Ensure it's still a child
+                    this.crackGroup.removeChild(effect.element);
                 }
+                this.activeCrackEffects.splice(i, 1);
             }
         }
 
-        this.updatePosition(); 
+        if (this.isDestroyed) {
+            const elapsed = Date.now() - this.destroyStartTime;
+            let effectiveGameSpeedMultiplier = gameSpeedMultiplier;
+            if (effectiveGameSpeedMultiplier === 0) {
+                effectiveGameSpeedMultiplier = 0.001; // Prevent division by zero
+            }
 
-        // Return true if the asteroid is far off-screen and should be removed
-        // Use a larger buffer (e.g., 2 times its size) to ensure it's well out of view
-        const removalBuffer = this.size * 2;
-        if (this.x < -removalBuffer || this.x > width + removalBuffer ||
-            this.y < -removalBuffer || this.y > height + removalBuffer) {
-            return true; // Mark for removal
+            // Calculate fade progress (0 to 1 over fadeDuration)
+            const fadeProgress = Math.min(1, elapsed / (this.fadeDuration));
+            // Calculate overall animation progress (0 to 1 over totalAnimationDuration)
+            const totalProgress = elapsed / (this.totalAnimationDuration);
+
+            if (totalProgress >= 1) {
+                // Animation complete, remove from DOM and mark for array removal
+                if (this.element.parentNode) {
+                    gameplayLayer.removeChild(this.element);
+                }
+                return true; // Mark for removal from asteroids array
+            }
+
+            // Update opacity based on fadeProgress
+            this.element.style.opacity = Math.max(0, 1 - fadeProgress);
+            // Update scale based on fadeProgress (scale should complete when fade completes)
+            const currentScale = 1 + (0.5 * fadeProgress); // Scale from 1 to 1.5
+
+            // Apply transform including current position, rotation, and scaling
+            this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${this.rotation}) scale(${currentScale})`);
+            return false; // Still alive for animation purposes
+        } else {
+            // Normal wrapping logic if not destroyed
+            if (this.x < -this.size) {
+              this.x = width + this.size;
+            }
+            else if (this.x > width + this.size) {
+              this.x = -this.size;
+            }
+            
+            if (this.y < -this.size) {
+              this.y = height + this.size;
+            }
+            else if (this.y > height + this.size) {
+              this.y = -this.size;
+            }
+
+            this.updatePosition(); // Apply normal transform
+
+            // Return true if the asteroid is far off-screen and should be removed
+            const removalBuffer = this.size * 2;
+            if (this.x < -removalBuffer || this.x > width + removalBuffer ||
+                this.y < -removalBuffer || this.y > height + removalBuffer) {
+                return true; // Mark for removal
+            }
+            return false; // Still alive and on-screen or within buffer
         }
-        return false; // Still alive and on-screen or within buffer
       }
 
       takeDamage(damage, laserAngle, impactX, impactY) { // Added impactX, impactY
+        if (this.isDestroyed) {
+            return; // Do not apply damage or effects if already destroyed
+        }
         this.health -= damage;
 
         // Play spark sound on hit (reduced volume to avoid cutting off laser sound)
@@ -2258,21 +2231,17 @@
         if (!hitFireball) {
             hitFireball = new FireballEffect();
         }
-        hitFireball.reset(impactX, impactY, this.size * 0.5 * SCALE_FACTOR, 200, 'visual'); // Smaller, shorter fireball for a hit
+        const hitFireballFinalSize = this.size * 0.5 * SCALE_FACTOR;
+        hitFireball.reset(impactX, impactY, hitFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, hitFireballFinalSize, 'visual'); // Removed durationMs
         activeFireballs.push(hitFireball);
 
         // Create sparks at the impact point, inheriting asteroid's velocity
         createExplosion(impactX, impactY, this.size * SCALE_FACTOR, 'spark', this.vx, this.vy);
 
-        const currentHealthRatio = this.health / this.initialHealth;
-        for (let i = this.damageThresholds.length - 1; i >= 0; i--) {
-            if (currentHealthRatio <= this.damageThresholds[i] && i >= this.damageStagesHit) {
-                // Pass impact coordinates and determine crack type
-                const crackType = (this.damageStagesHit === 0) ? 'starburst' : 'linear'; // First hit is starburst
-                this.addDamageCracks(1 + i, impactX, impactY, crackType); 
-                this.damageStagesHit = i + 1; 
-                break; 
-            }
+        // Only add the starburst crack on the first hit
+        if (!this.hasStarburstCrack) {
+            this.addDamageCracks(impactX, impactY); // Call without numNewCracks or crackType
+            this.hasStarburstCrack = true; // Mark that the starburst crack has been added
         }
 
         const deflectionForce = 0.5 / TARGET_FRAME_DURATION; 
@@ -2305,19 +2274,17 @@
         if (!fireball) {
             fireball = new FireballEffect();
         }
-        fireball.reset(this.x, this.y, this.size * 1.2 * SCALE_FACTOR, 400, 'visual'); // Reduced size and duration
+        const asteroidExplosionFireballFinalSize = this.size * 1.2 * SCALE_FACTOR;
+        fireball.reset(this.x, this.y, asteroidExplosionFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, asteroidExplosionFireballFinalSize, 'visual'); // Removed durationMs
         activeFireballs.push(fireball);
 
-        const index = asteroids.indexOf(this);
-        if (index > -1) {
-            asteroids.splice(index, 1);
-        }
+        // IMPORTANT: Do NOT remove from asteroids array here.
+        // It will be removed by the main loop when update() returns true after animation.
 
-        // Remove all crack elements that are still children of this.crackGroup
-        while (this.crackGroup.firstChild) {
-            this.crackGroup.removeChild(this.crackGroup.firstChild);
-        }
-        this.activeCrackEffects = []; 
+        // Do not explicitly remove crack elements here.
+        // They are children of this.element and will fade/scale with it.
+        // The activeCrackEffects array will be cleaned up by Asteroid.update()
+        // as the glowing cracks fade out.
 
         // Remove the clipPath definition from defs to prevent memory leaks
         const clipPathElement = document.getElementById(`asteroidClip-${this.id}`);
@@ -2325,19 +2292,28 @@
             clipPathElement.parentNode.removeChild(clipPathElement);
         }
 
-        const newSize = this.size * 0.8; 
-        if (!isNukeHit && newSize >= MIN_ASTEROID_SIZE) { 
-          const spawnX = this.x;
-          const spawnY = this.y;
+        const newSize = this.size * 0.6; // Asteroids split into 60% of their original size
+        if (!isNukeHit && newSize >= MIN_ASTEROID_SIZE) {
+          // Calculate spawn offset for the two new asteroids
+          const spawnOffsetMagnitude = newSize * 0.8; // Offset by a factor of the new asteroid's size
+          const initialSpawnAngle = random(0, Math.PI * 2); // Random angle for the first asteroid's offset
 
-          const angle1 = random(0, Math.PI * 2); 
-          const angle2 = random(0, Math.PI * 2); 
+          // Asteroid 1 spawn position
+          const spawnX1 = this.x + Math.cos(initialSpawnAngle) * spawnOffsetMagnitude;
+          const spawnY1 = this.y + Math.sin(initialSpawnAngle) * spawnOffsetMagnitude;
+
+          // Asteroid 2 spawn position (opposite direction)
+          const spawnX2 = this.x + Math.cos(initialSpawnAngle + Math.PI) * spawnOffsetMagnitude;
+          const spawnY2 = this.y + Math.sin(initialSpawnAngle + Math.PI) * spawnOffsetMagnitude;
+
+          const angle1 = random(0, Math.PI * 2);
+          const angle2 = random(0, Math.PI * 2);
 
           const inheritedSpeedFactor = random(0.8, 1.2);
           const inheritedRotationFactor = random(0.8, 1.2);
           
-          const kickSpeedMagnitude = random(0.2, 0.6) / TARGET_FRAME_DURATION; 
-          const kickRotationMagnitude = random(-0.3, 0.3) / TARGET_FRAME_DURATION; 
+          const kickSpeedMagnitude = random(0.2, 0.6) / TARGET_FRAME_DURATION;
+          const kickRotationMagnitude = random(-0.3, 0.3) / TARGET_FRAME_DURATION;
 
           const newVx1 = this.vx * inheritedSpeedFactor + Math.cos(angle1) * kickSpeedMagnitude;
           const newVy1 = this.vy * inheritedSpeedFactor + Math.sin(angle1) * kickSpeedMagnitude;
@@ -2348,50 +2324,47 @@
           const newVRotation2 = this.vRotation * inheritedRotationFactor + random(-0.3, 0.3) / TARGET_FRAME_DURATION;
 
           asteroids.push(new Asteroid(
-            spawnX, 
-            spawnY, 
+            spawnX1, 
+            spawnY1, 
             newSize,
             newSize, 
             newVx1, newVy1, newVRotation1,
-            this.gradientId // Pass parent's gradientId
+            this.gradientId, // Pass parent's gradientId
+            this.element // Pass the original asteroid's element to insert before
           ));
           asteroids.push(new Asteroid(
-            spawnX, 
-            spawnY, 
+            spawnX2, 
+            spawnY2, 
             newSize,
             newSize, 
             newVx2, newVy2, newVRotation2,
-            this.gradientId // Pass parent's gradientId
+            this.gradientId, // Pass parent's gradientId
+            this.element // Pass the original asteroid's element to insert before
           ));
         }
 
         // If on iOS, just remove the element immediately after splitting.
-        // Otherwise, perform the expand and fade animation.
+        // Otherwise, set flags for the expand and fade animation.
         if (isIOS) {
             if (this.element.parentNode) {
                 gameplayLayer.removeChild(this.element); // Remove from gameplay layer
             }
         } else {
-            // Temporarily enable transition for transform to animate the explosion scaling.
-            // The duration of 0.3s for transform can be different from opacity's 0.5s if desired.
-            // Here, we make them both 0.5s for simplicity.
-            const animationDuration = 500; // ms
-            this.element.style.transition = `opacity ${animationDuration/1000}s ease-out, transform ${animationDuration/1000}s ease-out`;
-
-            // Trigger the animations by setting the final state
-            this.element.style.opacity = 0;
-            // The transform will animate from its current state (scale 1) to scale 1.5
-            this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${this.rotation}) scale(1.5)`); 
+            // Set flags for destruction animation
+            this.isDestroyed = true;
+            this.destroyStartTime = Date.now();
             
-            // Remove from DOM after the animation completes
-            setTimeout(() => {
-                if (this.element.parentNode) {
-                    gameplayLayer.removeChild(this.element); // Remove from gameplay layer
-                }
-                // Optional: Reset transition if the element were to be pooled, 
-                // but since it's removed, it's not strictly necessary here.
-                // if (this.element) this.element.style.transition = 'opacity 0.5s ease-out';
-            }, animationDuration);
+            // Calculate durations based on constants and game speed
+            let effectiveGameSpeedMultiplier = gameSpeedMultiplier;
+            if (effectiveGameSpeedMultiplier === 0) {
+                effectiveGameSpeedMultiplier = 0.001; // Prevent division by zero
+            }
+            this.fadeDuration = ASTEROID_FADE_DURATION / effectiveGameSpeedMultiplier;
+            this.postFadeDuration = ASTEROID_POST_FADE_DURATION / effectiveGameSpeedMultiplier;
+            this.totalAnimationDuration = this.fadeDuration + this.postFadeDuration;
+
+            // Opacity and transform (including scale) will be updated continuously in the update method
+            // No CSS transitions are applied to ensure smooth JS control.
         }
       }
     }
@@ -2412,9 +2385,8 @@
         this.element.setAttribute('class', 'laser-beam');
         // Do NOT append to gameplayLayer here; append in reset() when activated.
 
-        // Create shapeElement once in constructor
-        this.shapeElement = createSVGElement('rect');
-        this.element.appendChild(this.shapeElement);
+        // shapeElement will be created dynamically in reset() based on laser type
+        this.shapeElement = null; 
 
         // Ensure it's hidden and off-screen initially
         this.element.style.display = 'none';
@@ -2422,60 +2394,83 @@
       }
 
       // Reset method now takes all parameters and configures the laser for use
-      reset(startX, startY, angle, type, predictedTargetX, predictedTargetY, actualTarget = null) {
+      reset(startX, startY, angle, type, predictedTargetX, predictedTargetY, actualTarget = null, commonCollisionTimeMs = null, commonTotalVisualDurationMs = null) {
         // Append to gameplayLayer here to ensure it's in the DOM when active
         if (!this.element.parentNode) { // Only append if not already in DOM
             gameplayLayer.appendChild(this.element);
         }
 
+        // Remove existing shapeElement if it's the wrong type or doesn't exist
+        if (this.shapeElement && 
+            ((type === 'user' && this.shapeElement.tagName !== 'polygon') || 
+             (type === 'defender' && this.shapeElement.tagName !== 'rect'))) {
+            this.element.removeChild(this.shapeElement);
+            this.shapeElement = null;
+        }
+
+        // Create shapeElement if it doesn't exist or was removed
+        if (!this.shapeElement) {
+            if (type === 'user') {
+                this.shapeElement = createSVGElement('polygon');
+            } else { // defender
+                this.shapeElement = createSVGElement('rect');
+            }
+            this.element.appendChild(this.shapeElement);
+        }
+
         this.shapeElement.removeAttribute('filter'); // Ensure no lingering filter from previous use
-        this.x = startX;
-        this.y = startY;
+        this.x = startX; // Current leading edge X
+        this.y = startY; // Current leading edge Y
+        this.startX = startX; // Store initial start X for distance calculation
+        this.startY = startY; // Store initial start Y for distance calculation
         this.predictedTargetX = predictedTargetX; // Store predicted coordinates
         this.predictedTargetY = predictedTargetY;
         this.actualTarget = actualTarget; // Store actual target object (for defender lasers)
         this.angle = angle;
         this.type = type;
         this.hasDamaged = false;
-        this.checkedTargetPointCollision = false; // New: Flag for user laser to check collision only once at target point
+        this.impactTriggered = false; // Flag to indicate if the impact logic has been triggered (hit or miss)
 
         const settings = qualitySettings[currentQualityLevel];
         this.damage = type === 'user' ? 10 : 10;
 
         // Update shapeElement attributes based on type
         if (this.type === 'user') {
-            this.initialWidth = 15 * SCALE_FACTOR; // Max width at origin
-            this.finalWidth = 1 * SCALE_FACTOR; // Min width at target (or beyond)
-            this.maxLength = Math.hypot(this.predictedTargetX - this.x, this.predictedTargetY - this.y); // Distance from origin to target
-            this.visualLength = 100 * SCALE_FACTOR; // Fixed visual length of the plasma burst (length of the rect)
-            this.growthDuration = 200 * SCALE_FACTOR; // Duration for the laser's tip to reach the target (faster)
-            this.fadeOutDuration = 200 * SCALE_FACTOR; // Duration for the laser to fade out after reaching target
-            this.initialLife = this.growthDuration + this.fadeOutDuration; // Total life duration
-            this.lifeRemaining = this.initialLife; // Initialize remaining life
-            this.startTime = Date.now();
-            this.currentTipX = startX; // Initialize currentTipX
-            this.currentTipY = startY; // Initialize currentTipY
+            this.initialWidth = 120 * SCALE_FACTOR; // Max width of the pulse (increased for wider look)
+            this.finalWidth = 1 * SCALE_FACTOR; // Min width of the pulse (tapered end)
+            // The maxLength is the distance to the target PLUS the overshoot distance for visual effect.
+            this.maxLength = Math.hypot(this.predictedTargetX - this.startX, this.predictedTargetY - this.startY) + USER_LASER_OVERSHOOT_DISTANCE;
+
+            // Calculate velocity for the pulse based on individual distance and common collision time
+            // This ensures all user lasers arrive at the target simultaneously.
+            const individualLaserSpeed = this.maxLength / commonCollisionTimeMs;
+            this.vx = Math.cos(angle) * individualLaserSpeed;
+            this.vy = Math.sin(angle) * individualLaserSpeed;
+
+            // Set collision and total visual durations from the common calculated values
+            this.collisionTimeMs = commonCollisionTimeMs;
+            this.totalVisualDurationMs = commonTotalVisualDurationMs;
+            this.totalTravelDistance = individualLaserSpeed * this.totalVisualDurationMs; // Total distance leading edge travels
+
+            this.lifeRemaining = this.totalVisualDurationMs; // Initialize remaining life
+            this.startTime = Date.now(); // For reference, not directly used for progress
+
+            this.initialPulseLength = USER_LASER_INITIAL_PULSE_LENGTH * SCALE_FACTOR; // Initial visual length
+            // this.finalPulseLength is no longer used for length, but width will taper to this.finalWidth
 
             this.shapeElement.setAttribute('fill', settings.laserGradient ? 'url(#userLaserGradient)' : 'rgb(0, 255, 0)');
-            this.shapeElement.removeAttribute('stroke'); // Remove stroke for user lasers
-            this.shapeElement.removeAttribute('stroke-width'); // Remove stroke-width for user lasers
-            this.shapeElement.setAttribute('rx', 3);
-            this.shapeElement.setAttribute('ry', 3);
+            this.shapeElement.removeAttribute('stroke');
+            this.shapeElement.removeAttribute('stroke-width');
+            // Removed rx and ry as they are for rect, not polygon
             if (settings.laserShadow) {
                 this.shapeElement.setAttribute('filter', 'url(#laserGlow)');
             } else {
-                this.shapeElement.removeAttribute('filter'); // Ensure filter is removed if not needed
+                this.shapeElement.removeAttribute('filter');
             }
-            // Set fixed dimensions for the rect, with its right edge at 0 (relative to group origin)
-            // This makes the laser "trail" behind its leading edge.
-            this.shapeElement.setAttribute('x', -this.visualLength);
-            this.shapeElement.setAttribute('y', -this.initialWidth / 2);
-            this.shapeElement.setAttribute('width', this.visualLength);
-            this.shapeElement.setAttribute('height', this.initialWidth); // Initial height, will be tapered in update
-
+            // No initial dimensions for polygon here; points will be set in update()
         } else { // Defender laser
-            this.initialWidth = 3 * SCALE_FACTOR; // Fixed width for defender
-            this.initialLength = 150 * SCALE_FACTOR; // Fixed length for defender
+            this.initialWidth = 4.5 * SCALE_FACTOR; // Fixed width for defender (half current width)
+            this.initialLength = 250 * SCALE_FACTOR; // Fixed length for defender (increased)
             
             // Defender lasers travel at a fixed speed
             this.vx = Math.cos(angle) * DEFENDER_LASER_SPEED_PX_PER_MS;
@@ -2483,13 +2478,16 @@
 
             // Calculate total distance to target for life calculation
             this.totalDistance = Math.hypot(predictedTargetX - startX, predictedTargetY - startY);
-            // Life is based on time to reach target plus a small fade out buffer
-            this.initialLife = (this.totalDistance / DEFENDER_LASER_SPEED_PX_PER_MS) + 50; 
-            this.lifeRemaining = this.initialLife; // Initialize remaining life
+            // Calculate collision time and total visual duration for defender lasers
+            this.collisionTimeMs = this.totalDistance / DEFENDER_LASER_SPEED_PX_PER_MS; // Time for leading edge to reach target
+            this.totalVisualDurationMs = this.collisionTimeMs; // Total time laser is visible (disappears on impact)
+
+            this.lifeRemaining = this.totalVisualDurationMs; // Initialize remaining life
+            this.startTime = Date.now(); // For reference, used for elapsed time calculation
 
             this.shapeElement.setAttribute('fill', settings.laserGradient ? 'url(#satelliteLaserGradient)' : 'rgb(255, 0, 0)');
-            this.shapeElement.removeAttribute('stroke'); // Remove stroke for defender lasers
-            this.shapeElement.removeAttribute('stroke-width'); // Remove stroke-width for defender lasers
+            this.shapeElement.removeAttribute('stroke');
+            this.shapeElement.removeAttribute('stroke-width');
             this.shapeElement.setAttribute('rx', 3);
             this.shapeElement.setAttribute('ry', 3);
             // Set dimensions for defender laser
@@ -2503,51 +2501,73 @@
         this.updatePosition(); // Initial position and size
       }
 
-      update(deltaTime) {
+      update(scaledDeltaTime) {
         const now = Date.now();
 
         if (this.type === 'user') {
+            let effectiveGameSpeedMultiplier = gameSpeedMultiplier;
+            if (effectiveGameSpeedMultiplier === 0) {
+                effectiveGameSpeedMultiplier = 0.001; // Prevent division by zero, make it extremely slow
+            }
+            
+            const collisionTimeScaled = this.collisionTimeMs / effectiveGameSpeedMultiplier;
+            const totalVisualDurationScaled = this.totalVisualDurationMs / effectiveGameSpeedMultiplier;
             const elapsed = now - this.startTime;
-            const totalAnimationTime = this.growthDuration + this.fadeOutDuration;
 
-            let growthProgress = 0;
-            if (elapsed <= this.growthDuration) {
-                growthProgress = elapsed / this.growthDuration;
-                growthProgress = 1 - Math.pow(1 - growthProgress, 3); // Ease-out for smoother growth
+            let effectivePulseLength;
+            let taperedWidth;
+
+            if (elapsed < collisionTimeScaled) {
+                // Before impact: The laser's tip (this.x, this.y) moves towards the target.
+                this.x = this.startX + this.vx * (elapsed * effectiveGameSpeedMultiplier);
+                this.y = this.startY + this.vy * (elapsed * effectiveGameSpeedMultiplier);
+
+                const growthProgress = Math.min(1, elapsed / collisionTimeScaled);
+                effectivePulseLength = this.initialPulseLength + (this.maxLength - this.initialPulseLength) * growthProgress;
+                taperedWidth = this.initialWidth + (this.finalWidth - this.initialWidth) * growthProgress; // Taper width during growth
             } else {
-                growthProgress = 1; // Ensure it reaches full growth
+                // After impact: The laser's tip (this.x, this.y) stops precisely at the target.
+                this.x = this.predictedTargetX;
+                this.y = this.predictedTargetY;
+
+                const postImpactElapsed = elapsed - collisionTimeScaled;
+                const postImpactProgress = Math.min(1, postImpactElapsed / (USER_LASER_POST_IMPACT_DURATION / effectiveGameSpeedMultiplier));
+                
+                // The length shrinks from its full length at impact (maxLength) down to 0.
+                effectivePulseLength = this.maxLength * (1 - postImpactProgress); 
+                taperedWidth = this.finalWidth; // Width is fixed at finalWidth during tail shrinkage
             }
 
-            // Calculate the current tip position of the laser
-            this.currentTipX = this.x + (this.predictedTargetX - this.x) * growthProgress;
-            this.currentTipY = this.y + (this.predictedTargetY - this.y) * growthProgress;
+            // Ensure effective length doesn't go negative (laser should disappear when base passes tip)
+            effectivePulseLength = Math.max(0, effectivePulseLength);
+            taperedWidth = Math.max(this.finalWidth, taperedWidth); // Ensure width doesn't go below finalWidth
 
-            // Calculate and apply width tapering directly to the shape element
-            const currentWidth = this.initialWidth + (this.finalWidth - this.initialWidth) * growthProgress;
-            this.shapeElement.setAttribute('height', currentWidth);
-            this.shapeElement.setAttribute('y', -currentWidth / 2); // Keep centered vertically
+            // Define points for the triangular pulse relative to the group's local origin (0,0)
+            // The group's origin (this.x, this.y) is now the tip of the laser.
+            // The laser extends backwards along the local X-axis.
+            const points = `0,0 ` + // Tip point (at the group's origin)
+                           `${-effectivePulseLength},${taperedWidth / 2} ` + // Base point 1 (bottom-left)
+                           `${-effectivePulseLength},${-taperedWidth / 2}`; // Base point 2 (top-left)
+            this.shapeElement.setAttribute('points', points);
 
-            // Collision check: only when the laser tip has reached the predicted target point
-            // and hasn't damaged yet.
-            if (elapsed >= this.growthDuration && !this.hasDamaged && !this.checkedTargetPointCollision) {
-                this.checkedTargetPointCollision = true; // Mark as checked
+            // Collision check: occurs when the laser's leading edge reaches the predicted target point
+            if (elapsed >= collisionTimeScaled && !this.impactTriggered) {
+                this.impactTriggered = true; // Mark that impact logic has been triggered
 
                 let hitObject = null;
-                // Check for collision at the PREDICTED target point
-                // Use a small radius around the predicted target point for hit detection
-                const hitDetectionRadius = 10 * SCALE_FACTOR; // Pixels around the clicked point
+                const hitDetectionRadius = 10 * SCALE_FACTOR; // Radius around the actual target point
 
-                // Check UFOs
+                // Check UFOs at the actual predicted target point
                 for (let j = ufos.length - 1; j >= 0; j--) {
                     const currentUfo = ufos[j];
                     if (Math.hypot(this.predictedTargetX - currentUfo.x, this.predictedTargetY - currentUfo.y) < currentUfo.size + hitDetectionRadius) {
                         hitObject = currentUfo;
-                        break; // Hit a UFO, no need to check others
+                        break;
                     }
                 }
 
-                if (!hitObject) { // Only check asteroids if no UFO was hit
-                    // Check asteroids
+                if (!hitObject) {
+                    // Check asteroids at the actual predicted target point
                     for (let j = asteroids.length - 1; j >= 0; j--) {
                         const asteroid = asteroids[j];
                         if (Math.hypot(this.predictedTargetX - asteroid.x, this.predictedTargetY - asteroid.y) < asteroid.size + hitDetectionRadius) {
@@ -2558,50 +2578,66 @@
                 }
 
                 if (hitObject) {
-                    hitObject.takeDamage(this.damage, this.angle, this.predictedTargetX, this.predictedTargetY); // Pass predicted impact coordinates
+                    // Pass the actual predicted target coordinates for damage and explosion
+                    hitObject.takeDamage(this.damage, this.angle, this.predictedTargetX, this.predictedTargetY);
                     createExplosion(this.predictedTargetX, this.predictedTargetY, hitObject.size, 'spark');
-                    this.hasDamaged = true;
-                    this.lifeRemaining = 0; // Make the laser disappear immediately on impact
-                } else {
-                    // If no hit object found, and we've checked the target point, immediately remove the laser
-                    this.lifeRemaining = 0;
+                    this.hasDamaged = true; // Set flag
                 }
             }
-            
-            // Laser life and fade out (only if not already impacted)
-            // If the laser has reached its target point and either hit something or found nothing,
-            // it should proceed to fade out.
-            if (!this.hasDamaged) {
-                // For user lasers, lifeRemaining is based on elapsed time from startTime
-                this.lifeRemaining = Math.max(0, this.initialLife - elapsed);
+
+            // Opacity: full until impact, then fade out over USER_LASER_POST_IMPACT_DURATION
+            if (elapsed < collisionTimeScaled) {
+                this.element.style.opacity = 1; // Fully opaque before impact point
             } else {
-                // If damaged, ensure it's marked for immediate removal
-                this.lifeRemaining = 0;
+                // Calculate fade progress from impact point to end of post-impact duration
+                const fadeProgress = (elapsed - collisionTimeScaled) / (USER_LASER_POST_IMPACT_DURATION / effectiveGameSpeedMultiplier);
+                this.element.style.opacity = Math.max(0, 1 - fadeProgress); // Fade from 1 to 0
             }
 
+            // Update lifeRemaining for removal check
+            this.lifeRemaining = Math.max(0, totalVisualDurationScaled - elapsed);
+
         } else { // Defender laser
-            this.x += this.vx * deltaTime; // Defender laser's origin moves
-            this.y += this.vy * deltaTime;
+            this.x += this.vx * scaledDeltaTime; // Defender laser's origin moves
+            this.y += this.vy * scaledDeltaTime;
 
             // Calculate the tip of the defender laser for collision detection
             const tipX = this.x + Math.cos(this.angle) * this.initialLength;
             const tipY = this.y + Math.sin(this.angle) * this.initialLength;
 
-            // Check for collision with the actual target object
+            const elapsed = Date.now() - this.startTime;
+            let effectiveGameSpeedMultiplier = gameSpeedMultiplier;
+            if (effectiveGameSpeedMultiplier === 0) {
+                effectiveGameSpeedMultiplier = 0.001; // Prevent division by zero, make it extremely slow
+            }
+
+            // Continuous collision check for defender lasers as they travel
             // Use a larger collision radius for defender lasers to make them more effective
             const collisionRadius = 20 * SCALE_FACTOR; // Increased from 10
-            if (this.actualTarget && Math.hypot(tipX - this.actualTarget.x, tipY - this.actualTarget.y) < (this.actualTarget.size / 2) + collisionRadius && !this.hasDamaged) {
+            if (!this.impactTriggered && this.actualTarget && Math.hypot(tipX - this.actualTarget.x, tipY - this.actualTarget.y) < (this.actualTarget.size / 2) + collisionRadius) {
+                this.impactTriggered = true; // Mark that impact logic has been triggered
                 // The target object is already known: this.actualTarget
-                this.actualTarget.takeDamage(this.damage, this.angle, tipX, tipY); // Pass actual impact coordinates
-                createExplosion(tipX, tipY, this.actualTarget.size, 'spark'); // Use actual impact point for explosion
+                // For defender lasers hitting UFOs, force impact to the UFO's center for visual consistency
+                const impactX = this.actualTarget.x;
+                const impactY = this.actualTarget.y;
+                this.actualTarget.takeDamage(this.damage, this.angle, impactX, impactY); // Pass UFO's center as impact coordinates
+                createExplosion(impactX, impactY, this.actualTarget.size, 'spark'); // Use UFO's center for explosion
                 this.hasDamaged = true;
-                this.lifeRemaining = 0; // Defender laser disappears immediately on impact
+            }
+
+            // Opacity and life management for defender lasers
+            if (this.impactTriggered) { // If impact has occurred, disappear immediately
+                this.lifeRemaining = 0;
+                this.element.style.opacity = 0;
             } else {
-                this.lifeRemaining -= deltaTime; // Defender laser also fades out
+                this.element.style.opacity = 1; // Fully opaque until impact
+                this.shapeElement.setAttribute('x', 0); // Ensure full length
+                this.shapeElement.setAttribute('width', this.initialLength); // Ensure full length
+                // Update lifeRemaining for removal check
+                this.lifeRemaining = Math.max(0, (this.totalVisualDurationMs / effectiveGameSpeedMultiplier) - elapsed);
             }
         }
 
-        this.element.style.opacity = this.lifeRemaining / this.initialLife;
         this.updatePosition();
 
         return this.lifeRemaining <= 0; // Return true if laser's time is up
@@ -2626,26 +2662,15 @@
         // Defensive check to prevent errors if x or y become undefined/NaN unexpectedly
         if (typeof this.x !== 'number' || isNaN(this.x) || typeof this.y !== 'number' || isNaN(this.y)) {
             console.error("Laser position (x or y) is invalid:", this.x, this.y, "Laser instance:", this);
-            // Attempt to set to a safe default to prevent further errors for this instance
             this.x = 0; 
             this.y = 0;
-            // If this happens, it indicates a deeper issue in how laser positions are managed.
-            // The transform will still be applied with (0,0) for this frame.
         }
 
         let rotationDegrees = this.angle * 180 / Math.PI;
         
-        if (this.type === 'user') {
-            // Defensive check for currentTipX/Y as well, as they are derived
-            if (typeof this.currentTipX !== 'number' || isNaN(this.currentTipX) || typeof this.currentTipY !== 'number' || isNaN(this.currentTipY)) {
-                console.error("User Laser tip position (currentTipX or Y) is invalid:", this.currentTipX, this.currentTipY, "Laser instance:", this);
-                this.currentTipX = this.x; // Fallback to base position
-                this.currentTipY = this.y;
-            }
-            this.element.setAttribute('transform', `translate(${this.currentTipX}, ${this.currentTipY}) rotate(${rotationDegrees})`);
-        } else { // type === 'defender'
-            this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${rotationDegrees})`);
-        }
+        // For both user and defender lasers, the group's origin is the laser's start point.
+        // The rect within the group is then drawn from that origin, extending along the angle.
+        this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${rotationDegrees})`);
       }
     }
 
@@ -2701,15 +2726,15 @@
             this.updatePosition(); // Initial position
         }
 
-        update(deltaTime) {
+        update(scaledDeltaTime) { // Changed parameter name for clarity
             if (this.hasExploded) {
-                this.life -= deltaTime; // Just fade out if already exploded
+                this.life -= scaledDeltaTime; // Just fade out if already exploded, scaled
                 this.element.style.opacity = this.life / this.initialLife;
                 return this.life <= 0;
             }
 
-            this.x += this.vx * deltaTime;
-            this.y += this.vy * deltaTime;
+            this.x += this.vx * scaledDeltaTime;
+            this.y += this.vy * scaledDeltaTime;
 
             // Calculate progress for scaling (0 at startY, 1 at targetY)
             // Since it moves upwards, y decreases.
@@ -2749,16 +2774,24 @@
                 nukeFlashElement.style.opacity = 1;
                 nukeFlashElement.style.display = ''; // Make visible
 
+                let effectiveGameSpeedMultiplier = gameSpeedMultiplier;
+                if (effectiveGameSpeedMultiplier === 0) {
+                    effectiveGameSpeedMultiplier = 0.001; // Prevent division by zero
+                }
+
+                const flashDelay = 10 / effectiveGameSpeedMultiplier; // Small delay, scaled live
+                const fadeDuration = 3000 / effectiveGameSpeedMultiplier; // 3s fade, scaled live
+
                 // Trigger fade after a very short delay to ensure opacity 1 is rendered
                 setTimeout(() => {
-                    nukeFlashElement.style.transition = 'opacity 1.5s ease-out'; // Longer 1.5s fade
+                    nukeFlashElement.style.transition = `opacity ${fadeDuration / 1000}s ease-out`;
                     nukeFlashElement.style.opacity = 0;
-                }, 10); // Small delay
+                }, flashDelay);
 
                 // Hide element after transition
                 setTimeout(() => {
                     nukeFlashElement.style.display = 'none';
-                }, 1510); // 10ms delay + 1500ms transition
+                }, flashDelay + fadeDuration); // Total duration scaled live
             }
 
             // Create the main expanding fireball visual effect
@@ -2767,7 +2800,8 @@
                 fireball = new FireballEffect();
             }
             // Nuke fireball, type is 'nuke'
-            fireball.reset(this.x, this.y, this.explosionRadius * SCALE_FACTOR, 2000, 'nuke');
+            const nukeFireballFinalSize = this.explosionRadius * SCALE_FACTOR;
+            fireball.reset(this.x, this.y, nukeFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, nukeFireballFinalSize, 'nuke'); // Removed durationMs
             activeFireballs.push(fireball);
 
             // Still create some smaller particles for added visual chaos
@@ -2813,29 +2847,41 @@
             this.element.setAttribute('cy', -9999);
         }
 
-        reset(x, y, maxRadius, durationMs, type = 'visual') {
+        reset(x, y, initialRadius, finalRadius, type = 'visual') { // Removed durationMs parameter
             this.x = x;
             this.y = y;
-            this.maxRadius = maxRadius;
-            this.duration = durationMs;
+            this.initialRadius = initialRadius; // Initial radius of the fireball
+            this.finalRadius = finalRadius; // Final radius the fireball expands to
+            // Calculate originalDuration based on the expansion rate and total expansion amount
+            this.originalDuration = (this.finalRadius - this.initialRadius) / FIREBALL_EXPANSION_RATE_PX_PER_MS;
+            // Ensure a minimum duration to prevent instant disappearance for very small expansions
+            if (this.originalDuration < 10) this.originalDuration = 10; // Minimum 10ms
+            
             this.startTime = Date.now();
             this.isAlive = true;
             this.type = type; // Store the type
-            this.hasAppliedDamage = false; // New: Flag to ensure damage is applied only once
+            this.hasAppliedDamage = false; // Flag to ensure damage is applied only once
 
             this.element.setAttribute('cx', this.x);
             this.element.setAttribute('cy', this.y);
             // Append to effectsLayer here to ensure it's on top of other elements when activated
             effectsLayer.appendChild(this.element);
-            this.element.setAttribute('r', 0); // Start with zero radius
-            this.element.setAttribute('fill', 'url(#fireballGradient)'); // Use the new gradient
+            this.element.setAttribute('r', this.initialRadius); // Start with the specified initial radius
+            // Fill is set in reset, but can be overridden by destroy() for UFOs
+            this.element.setAttribute('fill', 'url(#fireballGradient)'); // Default to standard fireball gradient
             this.element.style.opacity = 1; // Start fully opaque
             this.element.style.display = ''; // Make visible
         }
 
         update() {
             const elapsed = Date.now() - this.startTime;
-            let progress = elapsed / this.duration;
+            let effectiveGameSpeedMultiplier = gameSpeedMultiplier;
+            if (effectiveGameSpeedMultiplier === 0) {
+                effectiveGameSpeedMultiplier = 0.001; // Prevent division by zero, make it extremely slow
+            }
+
+            const effectiveDuration = this.originalDuration / effectiveGameSpeedMultiplier;
+            let progress = elapsed / effectiveDuration;
 
             if (progress >= 1) {
                 this.isAlive = false;
@@ -2843,26 +2889,26 @@
                 return true; // Mark for removal
             }
 
-            // Ease-out for radius growth
-            const easedProgress = 1 - Math.pow(1 - progress, 2); // Quadratic ease-out
-            const currentRadius = this.maxRadius * easedProgress;
+            // Calculate current radius: expands from initialRadius to finalRadius
+            const currentRadius = this.initialRadius + (this.finalRadius - this.initialRadius) * progress;
             this.element.setAttribute('r', currentRadius);
 
             // Apply damage only once when the fireball reaches a significant size
-            if (this.type === 'nuke' && !this.hasAppliedDamage && progress >= 0.2) { // Apply damage when 20% grown
-                destroyObjectsInRadius(this.x, this.y, currentRadius, true); // Pass true for isNukeHit
-                this.hasAppliedDamage = true; // Set flag to prevent repeated damage
+            // The damage radius is the current visual radius of the fireball.
+            if (this.type === 'nuke' && !this.hasAppliedDamage && progress >= 0.2) {
+                destroyObjectsInRadius(this.x, this.y, currentRadius, true);
+                this.hasAppliedDamage = true;
             }
 
             // Fade out towards the end
-            const fadeStartProgress = 0.7; // Start fading when 70% of duration is complete
+            const fadeStartProgress = 0.7;
             if (progress > fadeStartProgress) {
                 const fadeProgress = (progress - fadeStartProgress) / (1 - fadeStartProgress);
                 this.element.style.opacity = 1 - fadeProgress;
             } else {
                 this.element.style.opacity = 1;
             }
-            return false; // Still alive
+            return false;
         }
 
         remove() {
@@ -2888,10 +2934,10 @@
       constructor() {
         this.x = random(width * 0.2, width * 0.8);
         this.y = random(height * 0.2, height * 0.8);
-        this.size = random(40, 70) * SCALE_FACTOR; // This is the final, normal size of the UFO
+        this.size = random(30, 50) * SCALE_FACTOR; // Reduced size range for UFOs
         this.currentVisualScale = 0.01; // Start very small for warp-in effect
         this.warpInStartTime = Date.now();
-        this.warpInDuration = 1000 * SCALE_FACTOR; // 1 second warp-in duration
+        this.warpInDuration = 1000 * SCALE_FACTOR / gameSpeedMultiplier; // 1 second warp-in duration, scaled
 
         this.initialHealth = 500 * SCALE_FACTOR; // Increased UFO health
         this.health = 500 * SCALE_FACTOR; // UFOs start with full health
@@ -2901,13 +2947,13 @@
         this.rotation = random(0, 360);
         // Convert rotational velocity to per-millisecond for delta time scaling
         this.vRotation = random(-0.2, 0.2) / TARGET_FRAME_DURATION;
+        this.isDestroyed = false; // New flag: true when destruction animation starts
         this.element = createSVGElement('g');
         this.element.setAttribute('class', 'ufo');
         // No initial opacity transition on the main group for the break-apart effect
         gameplayLayer.appendChild(this.element); // Append to gameplay layer
 
         this.parts = []; // To store references to individual SVG elements
-        this.crackGroup = createSVGElement('g'); // Group for cracks (will be appended later)
         this.healthBarGroup = createSVGElement('g'); // New: Group for health bar
         gameplayLayer.appendChild(this.healthBarGroup); // Append health bar group directly to gameplay layer
 
@@ -2916,20 +2962,12 @@
         this.drawUFO(); // Initial drawing - populates this.parts and message elements
         this.drawHealthBar(); // Draw health bar (appends health bar elements to healthBarGroup)
 
-        // Ensure crackGroup is appended last to be on top of all other UFO parts
-        this.element.appendChild(this.crackGroup);
-
         // Append messageGroup to healthBarGroup so it moves and positions relative to the health bar
         this.healthBarGroup.appendChild(this.messageGroup);
 
         playSpatialSound(ufoBuffer, this.x); // Play UFO appearance sound with spatial audio
         // Message display is now handled by spawnUFO() for the group and managed by queue
         // this.displayMessage();
-
-        // Initialize activeCrackEffects and damageThresholds for UFO
-        this.activeCrackEffects = []; // Array to hold active CrackEffect instances
-        this.damageStagesHit = 0; // Track how many damage stages have been hit
-        this.damageThresholds = [0.75, 0.50, 0.25]; // Health ratios for new crack stages
       }
 
       /**
@@ -3127,61 +3165,6 @@
         this.messageGroup.appendChild(this.messageText);
       }
 
-      /**
-       * Adds new cracks to the UFO based on damage stages hit.
-       * @param {number} numNewCracks - The number of new crack elements to add.
-       */
-      addDamageCracks(numNewCracks) {
-          if (!this.crackGroup) return;
-          const settings = qualitySettings[currentQualityLevel];
-
-          for (let i = 0; i < numNewCracks; i++) {
-              const crack = createSVGElement('path');
-              const crackSize = random(this.size * settings.ufoCrackSizeFactor[0], this.size * settings.ufoCrackSizeFactor[1]);
-              // Calculate max allowed center radius for crack to stay within UFO's main body (polygon)
-              // Approximate with a bounding circle based on the average size
-              const maxCrackCenterRadius = this.size * 0.8 - crackSize;
-              const crackAngle = random(0, Math.PI * 2);
-              const crackCenterDist = random(0, maxCrackCenterRadius); // Distance from UFO's center
-              const startX = crackCenterDist * Math.cos(crackAngle);
-              const startY = crackCenterDist * Math.sin(crackAngle);
-
-              let pathData = `M${startX},${startY}`;
-              const numSegments = Math.floor(random(settings.ufoCrackSegments[0], settings.ufoCrackSegments[1]));
-              for (let j = 0; j < numSegments; j++) {
-                  // Generate segment points relative to the crack's start point and within its size
-                  const segmentOffsetX = random(-crackSize, crackSize);
-                  const segmentOffsetY = random(-crackSize, crackSize);
-                  pathData += ` L${startX + segmentOffsetX},${startY + segmentOffsetY}`;
-              }
-
-              // The final shaded color for the crack (UFO cracks are always dark grey/black)
-              const shadedCrackColor = 'rgb(20,20,25)'; 
-              const glowingCrackFadeDuration = 5000; // Duration for the glowing crack to fade out
-
-              // Shaded crack (bottom layer)
-              const shadedCrack = createSVGElement('path');
-              shadedCrack.setAttribute('d', pathData);
-              shadedCrack.setAttribute('fill', 'none'); // Cracks are outlines
-              shadedCrack.setAttribute('stroke', shadedCrackColor); // Solid shaded color
-              shadedCrack.setAttribute('stroke-width', random(1, 3));
-              shadedCrack.setAttribute('opacity', settings.crackFinalOpacity); // Set final opacity for the shaded crack
-              this.crackGroup.appendChild(shadedCrack);
-
-              // Glowing crack (top layer)
-              const glowingCrack = createSVGElement('path');
-              glowingCrack.setAttribute('d', pathData);
-              glowingCrack.setAttribute('fill', 'none'); // Cracks are outlines
-              glowingCrack.setAttribute('stroke', 'url(#crackGradient)'); // Use gradient stroke
-              glowingCrack.setAttribute('stroke-width', random(1, 3));
-              glowingCrack.setAttribute('filter', 'url(#crackGlowFilter)'); // Apply the shared glow filter
-              // Opacity is managed by CrackEffect
-              this.crackGroup.appendChild(glowingCrack);
-
-              // Add CrackEffect for the glowing crack
-              this.activeCrackEffects.push(new CrackEffect(glowingCrack, glowingCrackFadeDuration));
-          }
-      }
 
       /**
        * Draws the UFO's health bar.
@@ -3252,19 +3235,6 @@
         // Update health bar position (independent of UFO rotation)
         this.healthBarGroup.setAttribute('transform', `translate(${this.x}, ${this.y})`);
 
-        // Update and clean up crack effects
-        if (this.activeCrackEffects) {
-            for (let i = this.activeCrackEffects.length - 1; i >= 0; i--) {
-                const effect = this.activeCrackEffects[i];
-                if (effect.update()) { // If the effect is dead
-                    if (effect.element.parentNode === this.crackGroup) { // Ensure it's still a child
-                        this.crackGroup.removeChild(effect.element);
-                    }
-                    this.activeCrackEffects.splice(i, 1);
-                }
-            }
-        }
-
         // Wrap around - use the actual rendered size for boundary checks
         const actualRenderedSize = this.size * this.currentVisualScale;
         if (this.x < -actualRenderedSize * 2) this.x = width + actualRenderedSize * 2;
@@ -3282,22 +3252,14 @@
        * @param {number} laserAngle - Angle of the incoming laser for deflection.
        */
       takeDamage(damage, laserAngle, impactX, impactY) { // Added impactX, impactY
+        if (this.isDestroyed) {
+            return; // Do not apply damage or effects if already destroyed
+        }
         this.health -= damage;
 
         // Play spark sound on hit (reduced volume to avoid cutting off laser sound)
         playSpatialSound(sparkSoundBuffer, this.x, 0.2); // Play spark sound, even quieter
 
-        const currentHealthRatio = this.health / this.initialHealth;
-        // Check if a new damage stage has been hit
-        for (let i = this.damageThresholds.length - 1; i >= 0; i--) {
-            if (currentHealthRatio <= this.damageThresholds[i] && i >= this.damageStagesHit) {
-                // New stage hit, add cracks
-                // UFO cracks are always linear, no starburst for UFOs
-                this.addDamageCracks(1 + i, impactX, impactY, 'linear'); // Pass impact coordinates and force 'linear' type
-                this.damageStagesHit = i + 1; // Update stage hit
-                break; // Only add cracks for the highest stage hit
-            }
-        }
         this.updateHealthBar(); // Update health bar on damage
 
         // Calculate health ratio to determine resistance
@@ -3323,6 +3285,10 @@
       }
 
       destroy() {
+        if (this.isDestroyed) {
+            return; // Already destroyed, prevent re-triggering
+        }
+        this.isDestroyed = true; // Mark as destroyed immediately
         // Calculate pitch based on UFO size: larger UFOs get lower pitch
         const minOverallSize = MIN_ASTEROID_SIZE; // Use asteroid min size as a reference for the smallest possible object
         const maxOverallSize = MAX_ASTEROID_SIZE; // Use asteroid max size as a reference for the largest possible object
@@ -3335,14 +3301,9 @@
         const finalPitch = basePitch * random(0.9, 1.1); // Add +/- 10% random variation
 
         playSpatialSound(explosionBuffer, this.x, 1, finalPitch); // Play explosion sound with spatial audio
-        createExplosion(this.x, this.y, this.size * 1.2, 'explosion'); // Slightly smaller explosion for UFO
-
-        // Remove all active crack effects' elements
-        // Remove all crack elements that are still children of this.crackGroup
-        while (this.crackGroup.firstChild) {
-            this.crackGroup.removeChild(this.crackGroup.firstChild);
-        }
-        this.activeCrackEffects = []; // Clear the array immediately
+        createExplosion(this.x, this.y, this.size * 1.8, 'explosion'); // Larger initial explosion
+        createExplosion(this.x + random(-this.size*0.2, this.size*0.2), this.y + random(-this.size*0.2, this.size*0.2), this.size * 1.0, 'explosion'); // Second, slightly offset explosion
+        createExplosion(this.x, this.y, this.size * 1.5, 'spark'); // Add sparks to the UFO explosion
 
         // Remove this UFO instance from the global ufos array
         const index = ufos.indexOf(this);
@@ -3366,11 +3327,31 @@
             this.healthBarGroup.parentNode.removeChild(this.healthBarGroup);
         }
 
+        // Create a fireball effect for the UFO explosion BEFORE parts are detached/removed
+        // This ensures the fireball appears on top of the UFO as it's being destroyed.
+        let fireball = fireballPool.pop();
+        if (!fireball) {
+            fireball = new FireballEffect();
+        }
+        const ufoExplosionFireballFinalSize = this.size * 3.0 * SCALE_FACTOR; // Increased size for UFO fireball
+        fireball.reset(this.x, this.y, ufoExplosionFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, ufoExplosionFireballFinalSize, 'visual');
+        // Override the fill for the UFO explosion fireball to use the brighter gradient
+        fireball.element.setAttribute('fill', 'url(#ufoExplosionFireballGradient)');
+        activeFireballs.push(fireball);
+
         // Conditional part animation for quality levels
         if (currentQualityLevel === 'low') {
-            // For low quality, just remove the main element
+            // For low quality, just fade out the main element
             if (this.element.parentNode) {
-                canvas.removeChild(this.element);
+                const animationDuration = 250 / gameSpeedMultiplier; // ms, scaled by game speed - Reduced for quicker fade
+                this.element.style.transition = `opacity ${animationDuration/1000}s ease-out`;
+                this.element.style.opacity = 0; // Trigger fade out
+
+                setTimeout(() => {
+                    if (this.element.parentNode) {
+                        gameplayLayer.removeChild(this.element); // Remove from gameplay layer after fade
+                    }
+                }, animationDuration);
             }
         } else {
             // Detach and animate individual parts for medium/high quality
@@ -3380,62 +3361,75 @@
             const ufoCurrentScale = this.currentVisualScale;
 
             this.parts.forEach(part => {
-                // Get the part's current transformation matrix relative to the UFO's group
-                // This is a simplified way to get its initial relative position and rotation
-                // assuming the part itself doesn't have complex transforms before destruction.
                 const bbox = part.getBBox();
-                let initialPartX = bbox.x + bbox.width / 2; // Center of the part relative to UFO's group (0,0)
+                let initialPartX = bbox.x + bbox.width / 2;
                 let initialPartY = bbox.y + bbox.height / 2;
 
-                // Remove part from UFO group and append directly to effectsLayer
                 if (part.parentNode === this.element) {
                     this.element.removeChild(part);
                 }
-                effectsLayer.appendChild(part); // Now it's a direct child of the effects layer
+                gameplayLayer.appendChild(part); // Now it's a direct child of the gameplay layer
 
-                // Calculate initial absolute position and rotation for the detached part
-                // Apply UFO's current rotation and scale to the part's relative position
                 const rotatedScaledX = initialPartX * Math.cos(ufoCurrentRotation * Math.PI / 180) * ufoCurrentScale - initialPartY * Math.sin(ufoCurrentRotation * Math.PI / 180) * ufoCurrentScale;
                 const rotatedScaledY = initialPartX * Math.sin(ufoCurrentRotation * Math.PI / 180) * ufoCurrentScale + initialPartY * Math.cos(ufoCurrentRotation * Math.PI / 180) * ufoCurrentScale;
 
+                // Calculate the part's absolute position at the moment of destruction
+                // This is the UFO's absolute position + the part's rotated and scaled local offset
                 let currentPartAbsoluteX = ufoAbsoluteX + rotatedScaledX;
                 let currentPartAbsoluteY = ufoAbsoluteY + rotatedScaledY;
-                let currentPartRotation = ufoCurrentRotation; // Part starts with UFO's current rotation
+                let currentPartRotation = ufoCurrentRotation; // Initial rotation of the detached part
 
-                // Randomize velocity and rotation for explosion (even slower)
-                const angle = Math.random() * 2 * Math.PI;
-                const speed = random(0.02, 0.1); // Further reduced speed for slower disintegration
-                const vx = speed * Math.cos(angle);
-                const vy = speed * Math.sin(angle);
-                // Inherit UFO's rotational velocity and add some random variation
-                const rotationSpeed = this.vRotation + random(-0.1, 0.1); 
+                // Calculate the part's local center relative to the UFO's local origin (0,0)
+                const partLocalCenterX = bbox.x + bbox.width / 2;
+                const partLocalCenterY = bbox.y + bbox.height / 2;
 
-                const partFadeDuration = 4000; // 4 seconds for parts to fade (increased)
+                // Calculate the direction vector from UFO's local center (0,0) to part's local center
+                const directionX = partLocalCenterX;
+                const directionY = partLocalCenterY;
+                const magnitude = Math.hypot(directionX, directionY);
 
-                // Add to global explodingUfoParts array for centralized animation
+                let outwardVx = 0;
+                let outwardVy = 0;
+                const outwardKickForce = random(0.01, 0.05) / TARGET_FRAME_DURATION; // Significantly reduced force for minimal separation
+
+                if (magnitude > 0) { // Avoid division by zero if part is exactly at (0,0)
+                    outwardVx = (directionX / magnitude) * outwardKickForce;
+                    outwardVy = (directionY / magnitude) * outwardKickForce;
+                }
+
+                // Combine UFO's current velocity, a very small random component, and the outward kick
+                const randomAngle = Math.random() * 2 * Math.PI;
+                const randomSpeed = random(0.01, 0.05); // Very small random component for slight variety
+                const combinedVx = this.vx + randomSpeed * Math.cos(randomAngle) + outwardVx;
+                const combinedVy = this.vy + randomSpeed * Math.sin(randomAngle) + outwardVy;
+                
+                const rotationSpeed = this.vRotation + random(-0.1, 0.1); // Inherit UFO's rotation + very slight random spin
+
+                const partFadeDuration = 2000 / gameSpeedMultiplier; // Increased duration for slower fade and fly apart
+
                 explodingUfoParts.push(new UFOExplodingPart(
                     part,
                     currentPartAbsoluteX,
                     currentPartAbsoluteY,
                     currentPartRotation,
-                    vx, vy, rotationSpeed,
+                    combinedVx, combinedVy, rotationSpeed,
                     partFadeDuration, partFadeDuration
                 ));
             });
 
-            // Remove the main UFO group element after all parts have been detached
+            // Fade out the main UFO group element after all parts have been detached
             if (this.element.parentNode) {
-                gameplayLayer.removeChild(this.element); // Remove from gameplay layer
+                const animationDuration = 500 / gameSpeedMultiplier; // ms, scaled by game speed - Reverted to original speed
+                this.element.style.transition = `opacity ${animationDuration/1000}s ease-out`;
+                this.element.style.opacity = 0; // Trigger fade out
+
+                setTimeout(() => {
+                    if (this.element.parentNode) {
+                        gameplayLayer.removeChild(this.element); // Remove from gameplay layer after fade
+                    }
+                }, animationDuration);
             }
         }
-
-        // Create a fireball effect for the UFO explosion AFTER parts have been moved
-        let fireball = fireballPool.pop();
-        if (!fireball) {
-            fireball = new FireballEffect();
-        }
-        fireball.reset(this.x, this.y, this.size * 1.5 * SCALE_FACTOR, 800, 'visual'); // Reduced size and duration for UFO fireball
-        activeFireballs.push(fireball);
       }
 
       /**
@@ -3516,15 +3510,15 @@
 
         this.messageGroup.style.transition = `opacity ${settings.ufoMessageTransition}`;
         this.messageGroup.style.opacity = 1; // Show message
-        speakRoboticText(message, 50); // Play robotic voice for the message, faster (50ms per char)
+        speakRoboticText(message, 50 / gameSpeedMultiplier); // Play robotic voice for the message, scaled
 
         setTimeout(() => {
           this.messageGroup.style.opacity = 0; // Fade out after 0.5 seconds
           setTimeout(() => {
               this.messageGroup.style.display = 'none'; // Hide after fade
               if (callback) callback(); // Signal completion
-          }, parseFloat(settings.ufoMessageTransition) * 1000); // Wait for transition to complete
-        }, 500); // Reduced from 1000ms to 500ms
+          }, parseFloat(settings.ufoMessageTransition) * 1000 / gameSpeedMultiplier); // Wait for transition to complete, scaled
+        }, 500 / gameSpeedMultiplier); // Reduced from 1000ms to 500ms, scaled
       }
     }
 
@@ -3545,12 +3539,12 @@
             this.element.style.pointerEvents = 'none'; // Ensure clicks pass through
         }
 
-        update(deltaTime) {
-            this.x += this.vx * deltaTime;
-            this.y += this.vy * deltaTime;
+        update(scaledDeltaTime) { // Changed parameter name for clarity
+            this.x += this.vx * scaledDeltaTime;
+            this.y += this.vy * scaledDeltaTime;
             this.element.setAttribute('cx', this.x);
             this.element.setAttribute('cy', this.y);
-            this.lifeRemaining -= deltaTime;
+            this.lifeRemaining -= scaledDeltaTime; // Scaled
             this.element.style.opacity = this.lifeRemaining / this.initialLife;
             return this.lifeRemaining <= 0; // True if dead
         }
@@ -3586,11 +3580,11 @@
             this.element.style.opacity = 1; // Start full opacity
         }
 
-        update(deltaTime) {
-            this.x += this.vx * deltaTime;
-            this.y += this.vy * deltaTime;
-            this.rotation += this.vRotation * deltaTime; // Re-added: pieces should rotate around their own axis
-            this.lifeRemaining -= deltaTime;
+        update(scaledDeltaTime) { // Changed parameter name for clarity
+            this.x += this.vx * scaledDeltaTime;
+            this.y += this.vy * scaledDeltaTime;
+            this.rotation += this.vRotation * scaledDeltaTime; // Re-added: pieces should rotate around their own axis, scaled
+            this.lifeRemaining -= scaledDeltaTime; // Scaled
             this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${this.rotation})`); // Apply current rotation
             this.element.style.opacity = this.lifeRemaining / this.initialLife;
             return this.lifeRemaining <= 0; // True if dead
@@ -3625,21 +3619,21 @@
         particleSizeMax = baseSize * 0.3 * SCALE_FACTOR;
         particleSpeedMin = 3 / TARGET_FRAME_DURATION; // Increased speed
         particleSpeedMax = 8 / TARGET_FRAME_DURATION; // Increased speed
-        particleLife = 30 * TARGET_FRAME_DURATION; // Reduced life to 0.5 seconds
+        particleLife = 30 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Reduced life to 0.5 seconds, scaled
       } else if (type === 'spark') { // Corrected to else if
         numParticles = settings.sparkNumParticles;
         particleSizeMin = baseSize * 0.05 * SCALE_FACTOR; // Increased for more noticeable sparks
         particleSizeMax = baseSize * 0.15 * SCALE_FACTOR; // Increased for more noticeable sparks
         particleSpeedMin = 1.5 / TARGET_FRAME_DURATION; // Increased speed
         particleSpeedMax = 4 / TARGET_FRAME_DURATION; // Increased speed
-        particleLife = 30 * TARGET_FRAME_DURATION; // Increased life to 0.5 seconds for better visibility
+        particleLife = 30 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Increased life to 0.5 seconds for better visibility, scaled
       } else if (type === 'nukeFireball') { // New: Nuke explosion particles
         numParticles = 70; // Reduced number of particles for nuke explosion
         particleSizeMin = baseSize * 0.05 * SCALE_FACTOR; // Larger particles
         particleSizeMax = baseSize * 0.15 * SCALE_FACTOR; // Slightly reduced max size
         particleSpeedMin = 0.5 / TARGET_FRAME_DURATION; // Slower, lingering particles
         particleSpeedMax = 2 / TARGET_FRAME_DURATION;
-        particleLife = 90 * TARGET_FRAME_DURATION; // Reduced life for fireball effect (1.5 seconds)
+        particleLife = 90 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Reduced life for fireball effect (1.5 seconds), scaled
       }
 
       for (let i = 0; i < numParticles; i++) {
@@ -3800,11 +3794,12 @@
         return;
       }
 
-      const numUFOsToSpawn = 3;
-      for (let i = 0; i < numUFOsToSpawn; i++) {
+      const numUFOsToSpawn = 1; // Changed to spawn only one UFO at a time
+      // Only spawn a new UFO if there are no active UFOs
+      if (ufos.length === 0) {
         const newUFO = new UFO();
         ufos.push(newUFO);
-        ufoMessageQueue.push(newUFO); // Add new UFOs to the message queue
+        ufoMessageQueue.push(newUFO); // Add new UFO to the message queue
       }
       
       processUfoMessageQueue(); // Start processing the queue
@@ -3832,34 +3827,36 @@
       const now = Date.now();
       const frameStart = performance.now(); // Start measuring total frame time for this frame
 
-
       // If paused, only update FPS and stats, then request next frame and return
       if (isPaused) {
           requestAnimationFrame(update);
           return;
       }
 
+      // Apply game speed multiplier to deltaTime
+      const scaledDeltaTime = deltaTime * gameSpeedMultiplier;
+
       // Check if it's time to set a new target direction for the starfield
-      if (now - lastStarfieldDirectionChangeTime >= starfieldDirectionChangeInterval) {
+      if (now - lastStarfieldDirectionChangeTime >= starfieldDirectionChangeInterval / gameSpeedMultiplier) { // Scale interval
           setNewStarfieldTargetDirection();
           lastStarfieldDirectionChangeTime = now; // Reset the interval timer
       }
 
       // Smoothly interpolate current starfield velocity towards target velocity
-      const transitionProgress = Math.min(1, (now - starfieldDirectionTransitionStartTime) / starfieldDirectionChangeDuration);
+      const transitionProgress = Math.min(1, (now - starfieldDirectionTransitionStartTime) / (starfieldDirectionChangeDuration / gameSpeedMultiplier)); // Scale duration
       // Linear interpolation: current = start + (end - start) * progress
       starfieldVx = starfieldVx + (starfieldTargetVx - starfieldVx) * transitionProgress;
       starfieldVy = starfieldVy + (starfieldTargetVy - starfieldVy) * transitionProgress;
 
       // Update stars
       let sectionStart = performance.now();
-      stars.forEach(star => star.update(deltaTime)); // Pass deltaTime
+      stars.forEach(star => star.update(scaledDeltaTime)); // Pass scaledDeltaTime
       accumulatedPerformanceData.stars += (performance.now() - sectionStart);
 
       // Update date/time display position ONLY if it's visible
       if (isDateTimeVisible) {
           // Update orbit center drift direction periodically
-          if (now - lastDateTimeOrbitCenterDirectionChangeTime > dateTimeOrbitCenterDirectionChangeInterval) {
+          if (now - lastDateTimeOrbitCenterDirectionChangeTime > dateTimeOrbitCenterDirectionChangeInterval / gameSpeedMultiplier) { // Scale interval
               const angle = random(0, Math.PI * 2);
               dateTimeOrbitCenterVx = Math.cos(angle) * dateTimeOrbitCenterSpeedMax;
               dateTimeOrbitCenterVy = Math.sin(angle) * dateTimeOrbitCenterSpeedMax;
@@ -3867,8 +3864,8 @@
           }
 
           // Update orbit center position
-          dateTimeOrbitCenterX += dateTimeOrbitCenterVx * deltaTime;
-          dateTimeOrbitCenterY += dateTimeOrbitCenterVy * deltaTime;
+          dateTimeOrbitCenterX += dateTimeOrbitCenterVx * scaledDeltaTime;
+          dateTimeOrbitCenterY += dateTimeOrbitCenterVy * scaledDeltaTime;
 
           // Clamp orbit center within bounds, ensuring the entire orbit stays on screen
           // The orbit center must be at least dateTimeOrbitRadius from any edge.
@@ -3893,7 +3890,7 @@
           }
 
           // Update orbital angle
-          dateTimeOrbitAngle += dateTimeOrbitSpeed * deltaTime;
+          dateTimeOrbitAngle += dateTimeOrbitSpeed * scaledDeltaTime;
           if (dateTimeOrbitAngle > Math.PI * 2) dateTimeOrbitAngle -= Math.PI * 2; // Keep angle within 0 to 2PI
 
           // Calculate final position based on orbit center and orbital offset
@@ -3907,7 +3904,7 @@
 
       // Update defenders
       sectionStart = performance.now();
-      defenders.forEach(defender => defender.update(deltaTime)); // Pass deltaTime, renamed from satellites
+      defenders.forEach(defender => defender.update(scaledDeltaTime)); // Pass scaledDeltaTime, renamed from satellites
       accumulatedPerformanceData.defenders += (performance.now() - sectionStart);
 
       // Update asteroids and check for removal
@@ -3917,7 +3914,7 @@
         // If asteroid.update() returns true, it means it went off-screen horizontally and needs removal.
         // Asteroids are also removed from the array by their destroy() method (when health <= 0).
         // So, we remove here if update() signals removal.
-        if (asteroid.update(deltaTime)) {
+        if (asteroid.update(scaledDeltaTime)) {
             // Remove its SVG element from DOM
             if (asteroid.element.parentNode) {
                 gameplayLayer.removeChild(asteroid.element); // Remove from gameplay layer
@@ -3943,7 +3940,7 @@
       // Update UFOs
       sectionStart = performance.now();
       for (let i = ufos.length - 1; i >= 0; i--) {
-        ufos[i].update(deltaTime); // Pass deltaTime
+        ufos[i].update(scaledDeltaTime); // Pass scaledDeltaTime
       }
       accumulatedPerformanceData.ufo += (performance.now() - sectionStart);
 
@@ -3954,7 +3951,7 @@
         
         // Update the laser's position and life.
         // This will also handle damage and setting life=0 if it's a user laser and hits its target.
-        if (laser.update(deltaTime)) { // If update returns true, laser's life is up
+        if (laser.update(scaledDeltaTime)) { // If update returns true, laser's life is up
           laser.remove(); // Return to pool
           lasers.splice(i, 1);
         }
@@ -3965,7 +3962,7 @@
       sectionStart = performance.now();
       for (let i = nukes.length - 1; i >= 0; i--) {
           const nuke = nukes[i];
-          if (nuke.update(deltaTime)) { // If update returns true, nuke's life is up
+          if (nuke.update(scaledDeltaTime)) { // If update returns true, nuke's life is up
               nuke.remove(); // Return to pool
               nukes.splice(i, 1);
           }
@@ -3987,7 +3984,7 @@
       sectionStart = performance.now();
       for (let i = activeParticles.length - 1; i >= 0; i--) {
           const particle = activeParticles[i];
-          if (particle.update(deltaTime)) { // If particle is dead
+          if (particle.update(scaledDeltaTime)) { // If particle is dead
               particle.remove();
               activeParticles.splice(i, 1);
           }
@@ -4003,7 +4000,7 @@
       sectionStart = performance.now();
       for (let i = explodingUfoParts.length - 1; i >= 0; i--) {
           const part = explodingUfoParts[i];
-          if (part.update(deltaTime)) { // If part is dead
+          if (part.update(scaledDeltaTime)) { // If part is dead
               part.remove();
               explodingUfoParts.splice(i, 1);
           }
@@ -4011,13 +4008,13 @@
       accumulatedPerformanceData.explodingUfoParts += (performance.now() - sectionStart);
 
       // Spawn new asteroids (off-screen)
-      if (Date.now() - lastAsteroidSpawnTime > asteroidSpawnInterval) {
+      if (Date.now() - lastAsteroidSpawnTime > asteroidSpawnInterval / gameSpeedMultiplier) { // Scale interval
         spawnOffscreenAsteroid();
         lastAsteroidSpawnTime = Date.now();
       }
 
       // Spawn UFO
-      if (Date.now() - lastUfoSpawnTime > ufoSpawnInterval) {
+      if (Date.now() - lastUfoSpawnTime > ufoSpawnInterval / gameSpeedMultiplier) { // Scale interval
         spawnUFO();
         lastUfoSpawnTime = Date.now();
       }
@@ -4052,14 +4049,15 @@
       // Nuke availability logic
       if (now >= nukeNextAvailableTime) { // Nuke is ready
           nukeAvailable = true;
-          nukeButton.textContent = 'Nuke'; // Keep text simple
+          nukeButton.innerHTML = 'Nuke'; // Use innerHTML for text and potential line break
           nukeButton.classList.add('nuke-ready-pulse'); // Add pulsation class
           nukeButton.disabled = false;
       } else { // Nuke is on cooldown
           nukeAvailable = false; // Ensure this is false
-          const remainingTimeMs = nukeNextAvailableTime - now;
+          // Scale remaining time by gameSpeedMultiplier to make cooldown appear longer/shorter
+          const remainingTimeMs = (nukeNextAvailableTime - now) / gameSpeedMultiplier;
           const remainingSeconds = Math.max(0, Math.ceil(remainingTimeMs / 1000)); 
-          nukeButton.textContent = `Nuke: Cooldown (${remainingSeconds}s)`; // Show timer with label
+          nukeButton.innerHTML = `Nuke<br>${remainingSeconds}s`; // Show timer below Nuke text
           nukeButton.classList.remove('nuke-ready-pulse'); // Remove pulsation class
           nukeButton.disabled = true;
       }
@@ -4162,8 +4160,20 @@
       // If paused, do not allow new lasers to be fired
       if (isPaused) return;
 
-      const targetX = event.clientX;
-      const targetY = event.clientY;
+      const clickX = event.clientX;
+      const clickY = event.clientY;
+
+      // Calculate the angle from the center of the screen to the click point
+      // This angle will be used to extend the laser's visual target
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const angleToClick = Math.atan2(clickY - centerY, clickX - centerX);
+
+      // Calculate the new target point by extending the line from the center to the click point
+      // by the overshoot distance. This makes the laser appear to go "through" the click.
+      // The actual target for the laser's tip is the click point itself.
+      const targetX = clickX;
+      const targetY = clickY;
 
       // Define the four corner origins, now slightly off-screen
       const offset = 50 * SCALE_FACTOR; // Pixels to move off-screen
@@ -4174,6 +4184,21 @@
         { x: width + offset, y: height + offset }     // Bottom-right
       ];
 
+      // Calculate the maximum distance any laser needs to travel
+      let maxDistance = 0;
+      origins.forEach(origin => {
+        const distance = Math.hypot(targetX - origin.x, targetY - origin.y);
+        if (distance > maxDistance) {
+          maxDistance = distance;
+        }
+      });
+
+      // Calculate a common growth duration for all user lasers based on the max distance
+      // This duration is the *unscaled* time it would take at 100% speed.
+      // Calculate a common collision time for all user lasers based on the max distance
+      const commonCollisionTimeMs = Math.max(50, maxDistance / USER_LASER_SPEED_PX_PER_MS); // Minimum 50ms travel time
+      const commonTotalVisualDurationMs = commonCollisionTimeMs + USER_LASER_POST_IMPACT_DURATION;
+
       origins.forEach(origin => {
         const angle = Math.atan2(targetY - origin.y, targetX - origin.x);
         // Use laser pool
@@ -4181,7 +4206,8 @@
         if (!laser) { // If pool is empty, create a new one
             laser = new Laser();
         }
-        laser.reset(origin.x, origin.y, angle, 'user', targetX, targetY);
+        // Pass the actual target coordinates and the common durations
+        laser.reset(origin.x, origin.y, angle, 'user', targetX, targetY, null, commonCollisionTimeMs, commonTotalVisualDurationMs);
         laser.element.style.display = ''; // Make visible
         laser.element.style.opacity = 1; // Ensure full opacity at start
         lasers.push(laser);
@@ -4196,9 +4222,25 @@
     dateTimeToggleBtn.addEventListener('click', toggleDateTimeDisplay); // Add event listener for date/time toggle
     perfStatsToggleBtn.addEventListener('click', togglePerfStatsDisplay); // Add event listener for perf stats toggle
 
+    speedSlider.addEventListener('input', (event) => {
+        const sliderValue = parseInt(event.target.value);
+        gameSpeedMultiplier = sliderValue / 100; // Convert 0-100 to 0.0-1.0
+        speedValueSpan.textContent = `${sliderValue}%`;
+
+        // Update time-based properties for all active defenders
+        const settings = qualitySettings[currentQualityLevel]; // Get current quality settings
+        defenders.forEach(defender => {
+            defender.fireInterval = random(settings.defenderFireInterval[0], settings.defenderFireInterval[1]) / gameSpeedMultiplier;
+            defender.thrustCooldown = 500 / gameSpeedMultiplier;
+            defender.rcsCooldown = 100 / gameSpeedMultiplier;
+            defender.thrustOnDuration = 1000 * SCALE_FACTOR / gameSpeedMultiplier;
+            defender.thrustOffDuration = 1000 * SCALE_FACTOR / gameSpeedMultiplier;
+        });
+    });
+
     nukeButton.addEventListener('click', async (event) => { // Made async to await audio context resume
         // Don't fire if paused, not available, or one is already active
-        if (isPaused || !nukeAvailable || nukes.length > 0) return; 
+        if (isPaused || !nukeAvailable || nukes.length > 0) return;
 
         const ctx = getAudioContext();
         if (ctx.state === 'suspended') {
@@ -4228,7 +4270,7 @@
         playSpatialSound(nukeLaunchBuffer, startX, 1.2); // Play nuke launch sound, louder
         
         nukeAvailable = false;
-        nukeNextAvailableTime = Date.now() + nukeCooldown; // Set next available time
+        nukeNextAvailableTime = Date.now() + nukeCooldown; // Set next available time (real time, unscaled)
         nukeButton.textContent = 'Nuke'; // Keep text simple
         nukeButton.classList.remove('nuke-ready-pulse'); // Remove pulsation class
         nukeButton.disabled = true; // Disable immediately
@@ -4276,6 +4318,7 @@
       starsLayer = document.getElementById('starsLayer');
       gameplayLayer = document.getElementById('gameplayLayer');
       effectsLayer = document.getElementById('effectsLayer');
+      nukeFlashLayer = document.getElementById('nukeFlashLayer'); // New: Get reference to the nuke flash layer
 
       // Pre-populate object pools
       for (let i = 0; i < MAX_LASERS; i++) {
@@ -4312,7 +4355,7 @@
       nukeFlashElement.setAttribute('height', height);
       nukeFlashElement.setAttribute('fill', 'white');
       nukeFlashElement.style.opacity = 0; // Start transparent
-      effectsLayer.appendChild(nukeFlashElement); // Append to effects layer
+      nukeFlashLayer.appendChild(nukeFlashElement); // Append to the new nuke flash layer
 
       // Initialize date/time display movement parameters
       dateTimeOrbitRadius = Math.min(width, height) * 0.2; // 20% of the smaller dimension
