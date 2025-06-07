@@ -84,14 +84,27 @@
     padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
+    color: #e0e0e0; /* Base color for icons and text */
     background-color: rgba(50, 50, 50, 0.4);
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
+    display: flex; /* Use flexbox to center SVG icons */
+    justify-content: center;
+    align-items: center;
   }
   #controls-bottom button:hover {
     background-color: rgba(70, 70, 70, 0.6);
     border-color: rgba(255, 255, 255, 0.5);
+  }
+  /* Styles for SVG icons within buttons */
+  #controls-bottom button svg {
+    width: 24px; /* Adjust size as needed */
+    height: 24px;
+    fill: none; /* No fill for outlined look */
+    stroke: currentColor; /* Inherit button's text color for stroke */
+    stroke-width: 2; /* Adjust stroke thickness */
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   /* Hamburger Menu Icon Bar Styles */
@@ -343,9 +356,9 @@
       </radialGradient>
       <!-- Crack Gradient (Bright Yellow center, Red edges) -->
       <radialGradient id="crackGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-        <stop offset="0%" stop-color="rgba(255, 255, 0, 0.7)"/>    <!-- Bright Yellow, more transparent -->
-        <stop offset="50%" stop-color="rgba(255, 165, 0, 0.5)"/> <!-- Orange, more transparent -->
-        <stop offset="100%" stop-color="rgba(255, 0, 0, 0.3)"/>  <!-- Red, more transparent -->
+        <stop offset="0%" stop-color="rgba(255, 255, 0, 0.4)"/>    <!-- Bright Yellow, more transparent -->
+        <stop offset="50%" stop-color="rgba(255, 165, 0, 0.2)"/> <!-- Orange, more transparent -->
+        <stop offset="100%" stop-color="rgba(255, 0, 0, 0.05)"/>  <!-- Red, more transparent -->
       </radialGradient>
       <!-- Defender Gradient (Purple-Blue - More Pronounced) -->
       <radialGradient id="defenderGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -398,9 +411,25 @@
 
   <!-- Bottom Controls (remaining buttons) -->
   <div id="controls-bottom">
-    <button id="muteToggle" class="bottom-controls-button">🔊</button>
-    <button id="pauseToggle" class="bottom-controls-button">▶️</button>
-    <button id="dateTimeToggleBtn" class="bottom-controls-button">⏰</button>
+    <button id="muteToggle" class="bottom-controls-button">
+      <svg viewBox="0 0 24 24">
+        <path id="speaker-icon" d="M11 5L6 9H2v6h4l5 4z"></path>
+        <path id="muted-speaker-icon" d="M5 7L15 17" style="display: none;"></path>
+      </svg>
+    </button>
+    <button id="pauseToggle" class="bottom-controls-button">
+      <svg viewBox="0 0 24 24">
+        <path id="play-icon" d="M5 3l14 9-14 9z"></path>
+        <path id="pause-icon" d="M6 4h4v16H6zm8 0h4v16h-4z" style="display: none;"></path>
+      </svg>
+    </button>
+    <button id="dateTimeToggleBtn" class="bottom-controls-button">
+      <svg viewBox="0 0 24 24">
+        <circle id="clock-face" cx="12" cy="12" r="10"></circle>
+        <path id="clock-hands" d="M12 6v6l4 2"></path>
+        <line id="no-clock-slash" x1="4" y1="4" x2="20" y2="20" style="display: none;"></line>
+      </svg>
+    </button>
   </div>
 
   <button id="nukeButton" class="nuke-button" disabled>Nuke</button>
@@ -412,7 +441,18 @@
     const qualityToggleBtn = document.getElementById('qualityToggle');
     const dateTimeToggleBtn = document.getElementById('dateTimeToggleBtn'); // New: Get date/time toggle button
     const muteToggleBtn = document.getElementById('muteToggle'); // Get the new mute button
+    const speakerIcon = document.getElementById('speaker-icon');
+    const mutedSpeakerIcon = document.getElementById('muted-speaker-icon');
+
     const pauseToggleBtn = document.getElementById('pauseToggle'); // Get the new pause button
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
+
+    // New: Clock icon elements
+    const clockFace = document.getElementById('clock-face');
+    const clockHands = document.getElementById('clock-hands');
+    const noClockSlash = document.getElementById('no-clock-slash');
+
     const nukeButton = document.getElementById('nukeButton'); // Get the new nuke button
     const perfStatsToggleBtn = document.getElementById('perfStatsToggleBtn'); // New: Get perf stats toggle button
     const speedSlider = document.getElementById('speedSlider'); // New: Get speed slider
@@ -537,7 +577,7 @@
     const ASTEROID_FADE_DURATION = 500; // ms, time for asteroid opacity to go from 1 to 0
     const ASTEROID_POST_FADE_DURATION = 100; // ms, time asteroid remains in DOM after opacity is 0
     const FIREBALL_INITIAL_SIZE_FACTOR = 0.5; // Initial radius of fireball is this factor of its final radius (1/2 of final)
-    const FIREBALL_EXPANSION_RATE_PX_PER_MS = 0.09; // Pixels per millisecond the fireball radius expands
+    const FIREBALL_EXPANSION_RATE_PX_PER_MS = 0.2; // Pixels per millisecond the fireball radius expands (Increased for faster expansion)
     const USER_LASER_OVERSHOOT_DISTANCE = 50 * SCALE_FACTOR; // How far the user laser visually extends past the click target
 
     const numInitialDefenders = 6; // Renamed from numInitialSatellites
@@ -859,7 +899,8 @@
             ctx.suspend().then(() => {
                 console.log('AudioContext suspended.');
                 isMuted = true;
-                muteToggleBtn.textContent = '🔇'; // Muted icon
+                speakerIcon.style.display = ''; // Keep speaker visible
+                mutedSpeakerIcon.style.display = ''; // Show slash
             }).catch(e => {
                 console.error('Failed to suspend AudioContext:', e);
             });
@@ -867,7 +908,8 @@
             ctx.resume().then(() => {
                 console.log('AudioContext resumed.');
                 isMuted = false;
-                muteToggleBtn.textContent = '🔊'; // Unmuted icon
+                speakerIcon.style.display = ''; // Keep speaker visible
+                mutedSpeakerIcon.style.display = 'none'; // Hide slash
             }).catch(e => {
                 console.error('Failed to resume AudioContext:', e);
             });
@@ -879,7 +921,13 @@
      */
     function togglePause() {
         isPaused = !isPaused;
-        pauseToggleBtn.textContent = isPaused ? '⏸️' : '▶️'; // Pause/Play icon
+        if (isPaused) {
+            playIcon.style.display = 'none';
+            pauseIcon.style.display = '';
+        } else {
+            playIcon.style.display = '';
+            pauseIcon.style.display = 'none';
+        }
         const ctx = getAudioContext();
         if (isPaused) {
             if (ctx.state === 'running') {
@@ -917,7 +965,15 @@
      */
     function toggleDateTimeDisplay() {
         isDateTimeVisible = !isDateTimeVisible;
-        dateTimeToggleBtn.textContent = isDateTimeVisible ? '⏰' : '🚫⏰'; // Clock/No Clock icon
+        if (isDateTimeVisible) {
+            clockFace.style.display = '';
+            clockHands.style.display = '';
+            noClockSlash.style.display = 'none';
+        } else {
+            clockFace.style.display = ''; // Keep face visible
+            clockHands.style.display = 'none'; // Hide hands
+            noClockSlash.style.display = ''; // Show slash
+        }
         dateTimeDisplay.style.display = isDateTimeVisible ? 'block' : 'none';
     }
 
