@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>Planetary Defense</title>
-<script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  /* Custom styles for UI elements, replacing Tailwind CSS */
   html {
     color-scheme: only light !important; /* Prevent browser auto dark mode */
   }
@@ -94,7 +94,7 @@
     border-color: rgba(255, 255, 255, 0.5);
   }
 
-  /* Hamburger Menu Icon Styles */
+  /* Hamburger Menu Icon Bar Styles */
   #hamburger-menu-icon .bar {
     width: 25px;
     height: 3px;
@@ -103,14 +103,130 @@
     transition: 0.4s;
   }
 
+  /* Hamburger Menu Icon Container Styles */
+  .hamburger-menu-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    cursor: pointer;
+    padding: 8px; /* p-2 */
+    border-radius: 6px; /* rounded-md */
+    background-color: rgba(17, 24, 39, 0.5); /* bg-gray-900/50 */
+    transition: background-color 0.2s, border-color 0.2s; /* transition-colors duration-200 */
+  }
+  .hamburger-menu-icon:hover {
+    background-color: rgba(31, 41, 55, 0.7); /* hover:bg-gray-800/70 */
+  }
+
   /* Side Menu Styles */
-  #side-menu {
+  .side-menu {
+    position: fixed;
+    top: 0;
+    max-height: calc(100vh - 76px);
+    width: 256px; /* w-64 */
+    background-color: rgba(17, 24, 39, 0.9); /* bg-gray-900/90 */
+    color: #d1d5db; /* text-gray-300 */
+    z-index: 50;
+    transform: translateX(-100%); /* -translate-x-full */
+    transition: transform 0.3s ease-in-out; /* transition-transform duration-300 ease-in-out */
+    padding: 16px; /* p-4 */
+    display: flex; /* flex */
+    flex-direction: column; /* flex-col */
+    gap: 16px; /* space-y-4 */
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
   }
 
-  #side-menu.open {
+  .side-menu.open {
     transform: translateX(0); /* Slide in */
     left: 41px; /* Position after the hamburger icon (0px left-0 + 41px icon width) */
+  }
+
+  /* Side Menu Button Styles */
+  .side-menu-button {
+    padding: 8px 16px; /* px-4 py-2 */
+    background-color: rgba(31, 41, 55, 0.5); /* bg-gray-800/50 */
+    color: #d1d5db; /* text-gray-300 */
+    border-radius: 8px; /* rounded-lg */
+    box-shadow: none; /* shadow-none */
+    transition: background-color 0.2s, border-color 0.2s; /* transition-colors duration-200 */
+    text-align: left; /* text-left */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+  }
+  .side-menu-button:hover {
+    background-color: rgba(55, 65, 81, 0.7); /* hover:bg-gray-700/70 */
+  }
+
+  /* Side Menu Slider Container */
+  .side-menu-slider-container {
+    display: flex; /* flex */
+    align-items: center; /* items-center */
+    gap: 8px; /* space-x-2 */
+  }
+
+  /* Side Menu Label */
+  .side-menu-label {
+    color: #d1d5db; /* text-gray-300 */
+    font-size: 14px; /* text-sm */
+  }
+
+  /* Side Menu Slider Input */
+  .side-menu-slider {
+    width: 96px; /* w-24 */
+    height: 8px; /* h-2 */
+    background-color: #374151; /* bg-gray-700 */
+    border-radius: 8px; /* rounded-lg */
+    -webkit-appearance: none; /* appearance-none */
+    appearance: none;
+    cursor: pointer;
+  }
+  /* Specific styles for the slider thumb and track might be needed for full cross-browser consistency,
+     but for now, the basic appearance-none should suffice. */
+
+  /* Side Menu Value Span */
+  .side-menu-value {
+    color: #d1d5db; /* text-gray-300 */
+    font-size: 14px; /* text-sm */
+  }
+
+  /* Perf Stats Div (inside side menu) */
+  .side-menu-perf-stats {
+    background-color: rgba(31, 41, 55, 0.7); /* bg-gray-800/70 */
+    padding: 12px; /* p-3 */
+    border-radius: 8px; /* rounded-lg */
+    font-size: 14px; /* text-sm */
+    overflow: auto; /* overflow-auto */
+    max-height: 50%; /* max-h-1/2 */
+  }
+
+  /* Bottom Controls (remaining buttons) */
+  #controls-bottom {
+    position: absolute; /* Ensure explicit positioning */
+    bottom: 16px; /* 4 units from bottom */
+    left: 16px;  /* 4 units from left */
+    z-index: 9999; /* Ensure it's on top of almost everything */
+    display: flex; /* Ensure flexbox layout */
+    gap: 8px; /* space-x-2 equivalent */
+    align-items: center; /* To vertically align buttons */
+    background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent dark background */
+    padding: 10px;
+    border-radius: 10px;
+  }
+  /* New class for bottom control buttons */
+  .bottom-controls-button {
+    padding: 8px 16px; /* px-4 py-2 */
+    border-radius: 8px; /* rounded-lg */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #d1d5db; /* text-gray-300 */
+    background-color: rgba(17, 24, 39, 0.5); /* bg-gray-900/50 */
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s; /* transition-colors duration-200 */
+    box-shadow: none; /* shadow-none */
+  }
+  .bottom-controls-button:hover {
+    background-color: rgba(31, 41, 55, 0.7); /* hover:bg-gray-800/70 */
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   /* Styles for the square nuke button */
@@ -262,29 +378,29 @@
   </svg>
   <div id="dateTimeDisplay"></div> <!-- New div for date and time -->
   <!-- Hamburger Menu Icon -->
-  <div id="hamburger-menu-icon" class="absolute top-0 left-0 z-[1000] cursor-pointer p-2 rounded-md bg-gray-900/50 hover:bg-gray-800/70 transition-colors duration-200">
+  <div id="hamburger-menu-icon" class="hamburger-menu-icon">
     <div class="bar"></div>
     <div class="bar"></div>
     <div class="bar"></div>
   </div>
 
   <!-- Side Menu -->
-  <div id="side-menu" class="fixed top-0 max-h-[calc(100vh-76px)] w-64 bg-gray-900/90 text-gray-300 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out p-4 flex flex-col space-y-4">
-    <button id="qualityToggle" class="px-4 py-2 bg-gray-800/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-700/70 transition-colors duration-200 text-left">Quality: High</button>
-    <button id="perfStatsToggleBtn" class="px-4 py-2 bg-gray-800/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-700/70 transition-colors duration-200 text-left">Perf Stats: Off</button>
-    <div class="flex items-center space-x-2">
-      <label for="speedSlider" class="text-gray-300 text-sm">Speed:</label>
-      <input type="range" id="speedSlider" min="0" max="100" value="100" class="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
-      <span id="speedValue" class="text-gray-300 text-sm">100%</span>
+  <div id="side-menu" class="side-menu">
+    <button id="qualityToggle" class="side-menu-button">Quality: High</button>
+    <button id="perfStatsToggleBtn" class="side-menu-button">Perf Stats: Off</button>
+    <div class="side-menu-slider-container">
+      <label for="speedSlider" class="side-menu-label">Speed:</label>
+      <input type="range" id="speedSlider" min="0" max="100" value="100" class="side-menu-slider">
+      <span id="speedValue" class="side-menu-value">100%</span>
     </div>
-    <div id="perfStats" class="bg-gray-800/70 p-3 rounded-lg text-sm overflow-auto max-h-1/2"></div>
+    <div id="perfStats" class="side-menu-perf-stats"></div>
   </div>
 
   <!-- Bottom Controls (remaining buttons) -->
-  <div id="controls-bottom" class="absolute bottom-4 left-4 z-100 flex space-x-2">
-    <button id="muteToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">🔊</button>
-    <button id="pauseToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">▶️</button>
-    <button id="dateTimeToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">⏰</button>
+  <div id="controls-bottom">
+    <button id="muteToggle" class="bottom-controls-button">🔊</button>
+    <button id="pauseToggle" class="bottom-controls-button">▶️</button>
+    <button id="dateTimeToggleBtn" class="bottom-controls-button">⏰</button>
   </div>
 
   <button id="nukeButton" class="nuke-button" disabled>Nuke</button>
