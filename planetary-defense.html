@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <title>Planetary Defense</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -109,7 +110,7 @@
 
   #side-menu.open {
     transform: translateX(0); /* Slide in */
-    left: 57px; /* Position after the hamburger icon (16px left-4 + 41px icon width) */
+    left: 41px; /* Position after the hamburger icon (0px left-0 + 41px icon width) */
   }
 
   /* Styles for the square nuke button */
@@ -261,14 +262,14 @@
   </svg>
   <div id="dateTimeDisplay"></div> <!-- New div for date and time -->
   <!-- Hamburger Menu Icon -->
-  <div id="hamburger-menu-icon" class="absolute top-4 left-4 z-[1000] cursor-pointer p-2 rounded-md bg-gray-900/50 hover:bg-gray-800/70 transition-colors duration-200">
+  <div id="hamburger-menu-icon" class="absolute top-0 left-0 z-[1000] cursor-pointer p-2 rounded-md bg-gray-900/50 hover:bg-gray-800/70 transition-colors duration-200">
     <div class="bar"></div>
     <div class="bar"></div>
     <div class="bar"></div>
   </div>
 
   <!-- Side Menu -->
-  <div id="side-menu" class="fixed top-[57px] h-full w-64 bg-gray-900/90 text-gray-300 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out p-4 flex flex-col space-y-4">
+  <div id="side-menu" class="fixed top-0 max-h-[calc(100vh-76px)] w-64 bg-gray-900/90 text-gray-300 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out p-4 flex flex-col space-y-4">
     <button id="qualityToggle" class="px-4 py-2 bg-gray-800/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-700/70 transition-colors duration-200 text-left">Quality: High</button>
     <button id="perfStatsToggleBtn" class="px-4 py-2 bg-gray-800/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-700/70 transition-colors duration-200 text-left">Perf Stats: Off</button>
     <div class="flex items-center space-x-2">
@@ -281,9 +282,9 @@
 
   <!-- Bottom Controls (remaining buttons) -->
   <div id="controls-bottom" class="absolute bottom-4 left-4 z-100 flex space-x-2">
-    <button id="muteToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Mute: Off</button>
-    <button id="pauseToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Pause: Off</button>
-    <button id="dateTimeToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Date/Time: On</button>
+    <button id="muteToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">🔊</button>
+    <button id="pauseToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">▶️</button>
+    <button id="dateTimeToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">⏰</button>
   </div>
 
   <button id="nukeButton" class="nuke-button" disabled>Nuke</button>
@@ -375,6 +376,7 @@
     let isMuted = false;
     let isPaused = false; // New pause state variable
     let gameSpeedMultiplier = 0.75; // New: Global game speed multiplier (0.0 to 1.0)
+    let gameStartTime = 0; // New: Timestamp when the game officially starts (after initial load)
 
     // Nuke specific variables
     let nukeAvailable = false; // Is a nuke ready to fire?
@@ -583,6 +585,64 @@
         };
     }
 
+    /**
+     * Plays the specific nuke explosion sound effect using Web Audio API nodes.
+     * @param {number} sourceX - The X coordinate of the sound source on screen for panning.
+     * @param {number} sourceY - The Y coordinate of the sound source on screen (not used for panning, but for consistency).
+     */
+    function playNukeExplosionEffect(sourceX, sourceY) {
+        if (isMuted || isPaused) return;
+
+        const ctx = getAudioContext();
+        if (ctx.state !== 'running') {
+            console.warn('AudioContext not running, nuke explosion sound might not play immediately.');
+            return;
+        }
+
+        const now = ctx.currentTime;
+        const duration = 3 / gameSpeedMultiplier; // 3 seconds base duration, scaled by game speed
+
+        const gainNode = ctx.createGain();
+        gainNode.gain.setValueAtTime(1, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+        const filterNuke = ctx.createBiquadFilter();
+        filterNuke.type = "lowpass";
+        filterNuke.frequency.value = 800;
+
+        const osc = ctx.createOscillator();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(20, now + duration);
+
+        // Spatialization (panning)
+        const panner = ctx.createPanner();
+        panner.panningModel = 'HRTF';
+        panner.distanceModel = 'linear';
+        panner.refDistance = 1;
+        panner.maxDistance = 10000;
+        panner.rolloffFactor = 1;
+        const currentWidth = width > 0 ? width : 1;
+        const pannerX = (sourceX / currentWidth) * 2 - 1;
+        panner.positionX.setValueAtTime(pannerX, now);
+        panner.positionY.setValueAtTime(0, now);
+        panner.positionZ.setValueAtTime(-0.5, now); // Slightly behind listener for subtle 3D
+
+        osc.connect(filterNuke);
+        filterNuke.connect(panner);
+        panner.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + duration);
+
+        osc.onended = () => {
+            osc.disconnect();
+            filterNuke.disconnect();
+            panner.disconnect();
+            gainNode.disconnect();
+        };
+    }
 
     // --- Quality Control Settings ---
     const qualityLevels = ['high', 'medium', 'low'];
@@ -683,7 +743,7 @@
             ctx.suspend().then(() => {
                 console.log('AudioContext suspended.');
                 isMuted = true;
-                muteToggleBtn.textContent = 'Mute: On';
+                muteToggleBtn.textContent = '🔇'; // Muted icon
             }).catch(e => {
                 console.error('Failed to suspend AudioContext:', e);
             });
@@ -691,7 +751,7 @@
             ctx.resume().then(() => {
                 console.log('AudioContext resumed.');
                 isMuted = false;
-                muteToggleBtn.textContent = 'Mute: Off';
+                muteToggleBtn.textContent = '🔊'; // Unmuted icon
             }).catch(e => {
                 console.error('Failed to resume AudioContext:', e);
             });
@@ -703,7 +763,7 @@
      */
     function togglePause() {
         isPaused = !isPaused;
-        pauseToggleBtn.textContent = `Pause: ${isPaused ? 'On' : 'Off'}`;
+        pauseToggleBtn.textContent = isPaused ? '⏸️' : '▶️'; // Pause/Play icon
         const ctx = getAudioContext();
         if (isPaused) {
             if (ctx.state === 'running') {
@@ -741,7 +801,7 @@
      */
     function toggleDateTimeDisplay() {
         isDateTimeVisible = !isDateTimeVisible;
-        dateTimeToggleBtn.textContent = `Date/Time: ${isDateTimeVisible ? 'On' : 'Off'}`;
+        dateTimeToggleBtn.textContent = isDateTimeVisible ? '⏰' : '🚫⏰'; // Clock/No Clock icon
         dateTimeDisplay.style.display = isDateTimeVisible ? 'block' : 'none';
     }
 
@@ -1263,11 +1323,19 @@
         this.vy = 0; // Initial velocity Y (will be controlled by AI)
         this.rotation = random(0, 360); // Initial rotation
         this.vRotation = 0; // Initial rotational velocity (will be controlled by AI)
+
+        // New: Properties for Z-axis (scaling) oscillation for defenders
+        this.scaleOscillationSpeed = random(0.0003, 0.0008); // Slower than UFOs
+        this.scaleMin = 0.9; // Minimum scale factor (subtle)
+        this.scaleMax = 1.1; // Maximum scale factor (subtle)
+        this.scaleOffset = random(0, Math.PI * 2); // Random phase offset for desynchronized scaling
         
         const settings = qualitySettings[currentQualityLevel];
         // Scale fireInterval by gameSpeedMultiplier
         this.fireInterval = random(settings.defenderFireInterval[0], settings.defenderFireInterval[1]) / gameSpeedMultiplier;
-        this.lastFireTime = Date.now() + random(0, this.fireInterval); // Stagger initial firing
+        // Initialize lastFireTime to ensure a global 4-second delay from game start,
+        // plus a random offset for individual staggering of the *first* shot.
+        this.lastFireTime = gameStartTime + (4000 / gameSpeedMultiplier) + random(0, this.fireInterval);
 
         this.thrustForce = 0.005 / TARGET_FRAME_DURATION; // Acceleration per frame
         this.rotationForce = 0.05 / TARGET_FRAME_DURATION; // Increased rotational acceleration per frame (more aggressive)
@@ -1632,7 +1700,12 @@
         if (this.y < -this.size) this.y = height + this.size;
         if (this.y > height + this.size) this.y = -this.size;
 
-        this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${this.rotation})`);
+        // Calculate Z-axis (scaling) oscillation
+        // 'now' is already defined in the outer update function scope.
+        const scaleProgress = (Math.sin(now * this.scaleOscillationSpeed + this.scaleOffset) + 1) / 2; // 0 to 1
+        const zScale = this.scaleMin + (this.scaleMax - this.scaleMin) * scaleProgress;
+
+        this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${this.rotation}) scale(${zScale})`);
 
         this.fire();
       }
@@ -1703,13 +1776,8 @@
           }
         }
       }
-    }
+    } // Closes Defender class
 
-    /**
-     * Manages the glowing and fading effect of a single crack element.
-     * Manages the glowing and fading effect of a single crack element.
-     * The crack's color and opacity fade, and the glow filter's properties are animated.
-     */
     /**
      * Manages the glowing and fading effect of a single crack element.
      * It animates the opacity of the glowing crack, which has a pre-defined glow filter applied.
@@ -2827,7 +2895,7 @@
         }
 
         explode() {
-            playSpatialSound(nukeExplosionBuffer, this.x, 1.5, 0.7); // Play nuke explosion sound, louder, lower pitch
+            playNukeExplosionEffect(this.x, this.y); // Play nuke explosion sound
 
             // Trigger full-screen white flash
             if (nukeFlashElement) {
@@ -3019,6 +3087,13 @@
         // Convert rotational velocity to per-millisecond for delta time scaling
         this.vRotation = random(-0.2, 0.2) / TARGET_FRAME_DURATION;
         this.isDestroyed = false; // New flag: true when destruction animation starts
+
+        // New: Properties for Z-axis (scaling) oscillation
+        this.scaleOscillationSpeed = random(0.0005, 0.0015); // How fast it scales (radians per ms)
+        this.scaleMin = 0.7; // Minimum scale factor
+        this.scaleMax = 1.3; // Maximum scale factor
+        this.scaleOffset = random(0, Math.PI * 2); // Random phase offset for desynchronized scaling
+
         this.element = createSVGElement('g');
         this.element.setAttribute('class', 'ufo');
         // No initial opacity transition on the main group for the break-apart effect
@@ -3302,18 +3377,27 @@
         this.y += this.vy * deltaTime; // Scaled by delta time
         this.rotation += this.vRotation * deltaTime; // Scaled by delta time
 
+        // Calculate Z-axis (scaling) oscillation
+        // 'now' is already defined in the outer update function scope.
+        const scaleProgress = (Math.sin(now * this.scaleOscillationSpeed + this.scaleOffset) + 1) / 2; // 0 to 1
+        const zScale = this.scaleMin + (this.scaleMax - this.scaleMin) * scaleProgress;
+
+        // Combine warp-in scale with Z-axis oscillation scale
+        const combinedScale = this.currentVisualScale * zScale;
+
         // Update health bar position (independent of UFO rotation)
         this.healthBarGroup.setAttribute('transform', `translate(${this.x}, ${this.y})`);
 
         // Wrap around - use the actual rendered size for boundary checks
-        const actualRenderedSize = this.size * this.currentVisualScale;
+        // The effective size for boundary checks should consider the current Z-scale
+        const actualRenderedSize = this.size * combinedScale;
         if (this.x < -actualRenderedSize * 2) this.x = width + actualRenderedSize * 2;
         if (this.x > width + actualRenderedSize * 2) this.x = -actualRenderedSize * 2;
         if (this.y < -actualRenderedSize * 2) this.y = height + actualRenderedSize * 2;
         if (this.y > height + actualRenderedSize * 2) this.y = -actualRenderedSize * 2;
 
-        // Apply translation, rotation, and scale
-        this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${this.rotation}) scale(${this.currentVisualScale})`);
+        // Apply translation, rotation, and combined scale
+        this.element.setAttribute('transform', `translate(${this.x}, ${this.y}) rotate(${this.rotation}) scale(${combinedScale})`);
       }
 
       /**
@@ -4362,6 +4446,9 @@
 
     // --- Main Setup ---
     window.onload = async function() {
+      // Set the global game start time as early as possible
+      gameStartTime = Date.now();
+
       getAudioContext(); // This will create and attempt to resume the context
 
       // Generate sound data URIs and decode into AudioBuffers
@@ -4375,7 +4462,7 @@
         laserBuffer = await decodeAudio(generateToneSweep(150, 1200, 400)); // Defender laser: Higher pitch sweep
       } catch (e) { console.error("Failed to load laserBuffer:", e); }
       try {
-        userLaserBuffer = await decodeAudio(generateHarmonicToneSweep(600, 1200, 400, [1, 1.25, 1.5])); // Further increased duration for user laser
+        userLaserBuffer = await decodeAudio(generateHarmonicToneSweep(200, 1200, 400, [1, 1.25, 1.5])); // Further reduced duration for user laser
       } catch (e) { console.error("Failed to load userLaserBuffer:", e); }
       try {
         explosionBuffer = await decodeAudio(generateNoiseBurst(500, 1.5)); // Shorter duration for quicker explosions
@@ -4405,9 +4492,6 @@
         // Start high (800Hz), end lower (100Hz), duration 700ms, with a dissonant chord
         nukeLaunchBuffer = await decodeAudio(generateHarmonicToneSweep(700, 800, 100, [1, 1.122, 1.335, 1.5])); // Root, minor second, perfect fourth, perfect fifth (more dissonant)
       } catch (e) { console.error("Failed to load nukeLaunchBuffer:", e); }
-      try {
-        nukeExplosionBuffer = await decodeAudio(generateNoiseBurst(700, 1.2)); // Shorter duration for quicker nuke explosions
-      } catch (e) { console.error("Failed to load nukeExplosionBuffer:", e); }
       try {
         sparkSoundBuffer = await decodeAudio(generateSparkSound(200)); // Increased duration for more noticeable effect
       } catch (e) { console.error("Failed to load sparkSoundBuffer:", e); }
