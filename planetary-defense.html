@@ -44,10 +44,11 @@
     pointer-events: none; /* Allow clicks to pass through */
     z-index: 100; /* Ensure it's on top */
   }
+  /* Perf Stats is now inside the side menu, so its positioning changes */
   #perfStats {
-    position: absolute;
-    top: 15px;
-    left: 15px;
+    position: relative; /* Changed from absolute */
+    top: auto; /* Reset top */
+    left: auto; /* Reset left */
     color: #e0e0e0; /* Light grey for stats */
     font-size: 14px;
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
@@ -65,32 +66,50 @@
     opacity: 1;
     z-index: 50; /* Lasers should be above stars/background */
   }
-  /* Removed .explosion-particle CSS as particles are now SVG elements */
-  #controls {
-    position: absolute;
+  /* #controls is removed, replaced by hamburger menu and controls-bottom */
+  #controls-bottom {
+    position: absolute; /* Ensure explicit positioning */
     bottom: 16px; /* 4 units from bottom */
     left: 16px;  /* 4 units from left */
-    z-index: 9999; /* Very high z-index to ensure visibility */
-    background-color: rgba(0, 0, 0, 0.4); /* More transparent dark background */
+    z-index: 9999; /* Ensure it's on top of almost everything */
+    display: flex; /* Ensure flexbox layout */
+    gap: 8px; /* space-x-2 equivalent */
+    align-items: center; /* To vertically align buttons */
+    background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent dark background */
     padding: 10px;
     border-radius: 10px;
-    display: flex; /* From Tailwind */
-    gap: 8px; /* space-x-2 in Tailwind */
-    align-items: center; /* To vertically align buttons */
   }
-  #controls button {
-    /* Basic button styling to ensure they are visible */
-    padding: 8px 10px; /* Reduced horizontal padding for less width */
+  #controls-bottom button { /* Apply button styles to the new bottom controls */
+    padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: #e0e0e0;
-    background-color: rgba(50, 50, 50, 0.4); /* More transparent button background */
+    background-color: rgba(50, 50, 50, 0.4);
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
   }
-  #controls button:hover {
-    background-color: rgba(70, 70, 70, 0.6); /* Adjusted hover transparency */
+  #controls-bottom button:hover {
+    background-color: rgba(70, 70, 70, 0.6);
     border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Hamburger Menu Icon Styles */
+  #hamburger-menu-icon .bar {
+    width: 25px;
+    height: 3px;
+    background-color: #e0e0e0;
+    margin: 5px 0;
+    transition: 0.4s;
+  }
+
+  /* Side Menu Styles */
+  #side-menu {
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+  }
+
+  #side-menu.open {
+    transform: translateX(0); /* Slide in */
+    left: 57px; /* Position after the hamburger icon (16px left-4 + 41px icon width) */
   }
 
   /* Styles for the square nuke button */
@@ -163,10 +182,6 @@
         <stop offset="50%" stop-color="rgba(255, 255, 255, 1)"/> <!-- Brightest white in center -->
         <stop offset="100%" stop-color="rgba(255, 0, 0, 0.3)"/> <!-- More transparent red at ends -->
       </linearGradient>
-      <filter id="laserGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <!-- Simplified for performance, especially for particles -->
-          <feDropShadow dx="0" dy="0" stdDeviation="30" flood-color="rgba(0, 255, 0, 0.6)"/>
-      </filter>
       <!-- Generic glow filter for cracks -->
       <filter id="crackGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="0" stdDeviation="15" flood-color="rgba(255, 0, 0, 0.8)"/>
@@ -211,9 +226,9 @@
       </radialGradient>
       <!-- Crack Gradient (Bright Yellow center, Red edges) -->
       <radialGradient id="crackGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-        <stop offset="0%" stop-color="rgba(255, 255, 0, 1)"/>    <!-- Bright Yellow -->
-        <stop offset="50%" stop-color="rgba(255, 165, 0, 0.8)"/> <!-- Orange -->
-        <stop offset="100%" stop-color="rgba(255, 0, 0, 0.6)"/>  <!-- Red -->
+        <stop offset="0%" stop-color="rgba(255, 255, 0, 0.7)"/>    <!-- Bright Yellow, more transparent -->
+        <stop offset="50%" stop-color="rgba(255, 165, 0, 0.5)"/> <!-- Orange, more transparent -->
+        <stop offset="100%" stop-color="rgba(255, 0, 0, 0.3)"/>  <!-- Red, more transparent -->
       </radialGradient>
       <!-- Defender Gradient (Purple-Blue - More Pronounced) -->
       <radialGradient id="defenderGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -245,18 +260,30 @@
     <g id="nukeFlashLayer"></g> <!-- New layer specifically for the nuke flash -->
   </svg>
   <div id="dateTimeDisplay"></div> <!-- New div for date and time -->
-  <div id="perfStats"></div> <!-- New div for performance stats -->
-  <div id="controls" class="absolute bottom-4 left-4 z-100 flex space-x-2">
-    <button id="qualityToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Quality: High</button>
-    <button id="muteToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Mute: Off</button>
-    <button id="pauseToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Pause: Off</button>
-    <button id="dateTimeToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Date/Time: On</button> <!-- New button -->
-    <button id="perfStatsToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Perf Stats: Off</button> <!-- New button -->
+  <!-- Hamburger Menu Icon -->
+  <div id="hamburger-menu-icon" class="absolute top-4 left-4 z-[1000] cursor-pointer p-2 rounded-md bg-gray-900/50 hover:bg-gray-800/70 transition-colors duration-200">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+  </div>
+
+  <!-- Side Menu -->
+  <div id="side-menu" class="fixed top-[57px] h-full w-64 bg-gray-900/90 text-gray-300 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out p-4 flex flex-col space-y-4">
+    <button id="qualityToggle" class="px-4 py-2 bg-gray-800/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-700/70 transition-colors duration-200 text-left">Quality: High</button>
+    <button id="perfStatsToggleBtn" class="px-4 py-2 bg-gray-800/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-700/70 transition-colors duration-200 text-left">Perf Stats: Off</button>
     <div class="flex items-center space-x-2">
       <label for="speedSlider" class="text-gray-300 text-sm">Speed:</label>
       <input type="range" id="speedSlider" min="0" max="100" value="100" class="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
       <span id="speedValue" class="text-gray-300 text-sm">100%</span>
     </div>
+    <div id="perfStats" class="bg-gray-800/70 p-3 rounded-lg text-sm overflow-auto max-h-1/2"></div>
+  </div>
+
+  <!-- Bottom Controls (remaining buttons) -->
+  <div id="controls-bottom" class="absolute bottom-4 left-4 z-100 flex space-x-2">
+    <button id="muteToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Mute: Off</button>
+    <button id="pauseToggle" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Pause: Off</button>
+    <button id="dateTimeToggleBtn" class="px-4 py-2 bg-gray-900/50 text-gray-300 rounded-lg shadow-none hover:bg-gray-800/70 transition-colors duration-200">Date/Time: On</button>
   </div>
 
   <button id="nukeButton" class="nuke-button" disabled>Nuke</button>
@@ -264,7 +291,7 @@
   <script>
     const canvas = document.getElementById('spaceCanvas');
     const dateTimeDisplay = document.getElementById('dateTimeDisplay'); // New: Get date/time display div
-    const perfStatsDiv = document.getElementById('perfStats'); // New: Get performance stats div
+    // Moved perfStatsDiv inside side-menu, so its reference needs to be updated
     const qualityToggleBtn = document.getElementById('qualityToggle');
     const dateTimeToggleBtn = document.getElementById('dateTimeToggleBtn'); // New: Get date/time toggle button
     const muteToggleBtn = document.getElementById('muteToggle'); // Get the new mute button
@@ -273,6 +300,11 @@
     const perfStatsToggleBtn = document.getElementById('perfStatsToggleBtn'); // New: Get perf stats toggle button
     const speedSlider = document.getElementById('speedSlider'); // New: Get speed slider
     const speedValueSpan = document.getElementById('speedValue'); // New: Get speed value display
+
+    // New: Hamburger menu elements
+    const hamburgerMenuIcon = document.getElementById('hamburger-menu-icon');
+    const sideMenu = document.getElementById('side-menu');
+    const perfStatsDiv = document.getElementById('perfStats'); // Now inside side-menu
 
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -342,7 +374,7 @@
     // Game state variables
     let isMuted = false;
     let isPaused = false; // New pause state variable
-    let gameSpeedMultiplier = 1.0; // New: Global game speed multiplier (0.0 to 1.0)
+    let gameSpeedMultiplier = 0.75; // New: Global game speed multiplier (0.0 to 1.0)
 
     // Nuke specific variables
     let nukeAvailable = false; // Is a nuke ready to fire?
@@ -440,6 +472,8 @@
     let userLaserBuffer;
     let explosionBuffer;
     let ufoBuffer;
+    let ufoExplosionHowlBuffer; // New: UFO explosion howl sound
+    let ufoWarpInSoundBuffer; // New: Reversed UFO howl for warp-in
     let nukeLaunchBuffer; // New: Nuke launch sound
     let nukeExplosionBuffer; // New: Nuke explosion sound
     let sparkSoundBuffer; // New: Sparking sound for hits
@@ -558,9 +592,9 @@
     const qualitySettings = {
       'high': {
         starCount: 300, // Reverted to original star count
-        asteroidNumParticles: 15,
-        sparkNumParticles: 8,
-        defenderFireInterval: [300, 1000],
+        asteroidNumParticles: 8,
+        sparkNumParticles: 15, // Increased
+        defenderFireInterval: [1200, 4000],
         laserLifeDefender: 200 * TARGET_FRAME_DURATION, // This value is a base, scaled when used in Laser.reset
         laserTransitionDuration: '0.1s',
         laserGradient: true,
@@ -569,15 +603,15 @@
         ufoMessageShadow: true,
         ufoMessageTransition: '3s ease-in-out',
         particleAggregationGridSize: 50,
-        particleAggregationThreshold: 8,
+        particleAggregationThreshold: 8, // Re-enable aggregation
         aggregatedParticleEffectSize: 40,
         aggregatedParticleEffectDuration: 600 / gameSpeedMultiplier // Scaled
       },
       'medium': {
         starCount: 150, // Reverted to original star count
-        asteroidNumParticles: 8,
-        sparkNumParticles: 5,
-        defenderFireInterval: [500, 1500],
+        asteroidNumParticles: 5,
+        sparkNumParticles: 10, // Reverted
+        defenderFireInterval: [2000, 6000],
         laserLifeDefender: 150 * TARGET_FRAME_DURATION, // This value is a base, scaled when used in Laser.reset
         laserTransitionDuration: '0.05s',
         laserGradient: true,
@@ -586,15 +620,15 @@
         ufoMessageShadow: true,
         ufoMessageTransition: '2s ease-in-out',
         particleAggregationGridSize: 70,
-        particleAggregationThreshold: 6,
+        particleAggregationThreshold: 6, // Reverted
         aggregatedParticleEffectSize: 30,
         aggregatedParticleEffectDuration: 500 / gameSpeedMultiplier // Scaled
       },
       'low': {
         starCount: 50, // Reverted to original star count
-        asteroidNumParticles: 2,
-        sparkNumParticles: 1,
-        defenderFireInterval: [800, 2000],
+        asteroidNumParticles: 1,
+        sparkNumParticles: 3, // Reverted
+        defenderFireInterval: [3200, 8000],
         laserLifeDefender: 100 * TARGET_FRAME_DURATION, // This value is a base, scaled when used in Laser.reset
         laserTransitionDuration: '0s',
         laserGradient: false,
@@ -603,7 +637,7 @@
         ufoMessageShadow: false,
         ufoMessageTransition: '0s',
         particleAggregationGridSize: 100,
-        particleAggregationThreshold: 4,
+        particleAggregationThreshold: 4, // Reverted
         aggregatedParticleEffectSize: 20,
         aggregatedParticleEffectDuration: 400 / gameSpeedMultiplier // Scaled
       }
@@ -959,7 +993,7 @@
         for (let i = 0; i < numSamples; i++) {
             const t = i / numSamples; // Normalized time from 0 to 1
             let amplitude = 1 - t; // Linear decay from 1 to 0
-            amplitude = Math.pow(amplitude, 4); // Faster exponential decay for a sharper fizz
+            amplitude = Math.pow(amplitude, 2); // Reduced decay power for a slightly longer fizz
 
             // High-frequency noise
             buffer[i] = (Math.random() * 2 - 1) * 0.3 * amplitude; // Reduced amplitude
@@ -1681,13 +1715,32 @@
      * It animates the opacity of the glowing crack, which has a pre-defined glow filter applied.
      */
     class CrackEffect {
-        constructor(svgElement, durationMs) {
-            this.element = svgElement; // This is the "glowing" crack element
-            this.duration = durationMs;
+        constructor(glowingElement, shadedElement, durationMs) {
+            // Defensive checks: Ensure elements are valid SVG elements
+            if (!(glowingElement instanceof SVGElement)) {
+                // Assign a dummy element or handle error appropriately if this is critical
+                this.glowingElement = createSVGElement('g'); // Assign a dummy group to prevent further errors
+            } else {
+                this.glowingElement = glowingElement;
+            }
+
+            if (!(shadedElement instanceof SVGElement)) {
+                this.shadedElement = createSVGElement('g'); // Assign a dummy group
+            } else {
+                this.shadedElement = shadedElement;
+            }
+            
+            this.duration = durationMs; // Total duration for the glowing effect to fade out
             this.startTime = Date.now();
             this.isAlive = true;
 
-            this.element.setAttribute('opacity', 1); // Ensure it starts fully opaque
+            this.glowingElement.setAttribute('opacity', 1); // Starts fully opaque (gradient provides transparency)
+            // shadedElement's initial opacity is set in Asteroid.addDamageCracks
+            // this.shadedElement.setAttribute('opacity', 0.5); // Already set in addDamageCracks
+
+            // Define when the shaded crack starts fading in and how long it takes
+            this.shadedFadeInStartProgress = 0.7; // Start fading in when glowing crack is 70% faded
+            this.shadedFadeInDurationFactor = 0.3; // Takes 30% of total duration to fade in
         }
 
         update() {
@@ -1695,18 +1748,23 @@
             let progress = elapsed / this.duration;
 
             if (progress >= 1) {
-                this.element.setAttribute('opacity', 0); // Ensure it's fully transparent
-                
-                // The parent (UFO/Asteroid) is now responsible for removing the element from DOM
-                // when this.update() returns true.
-
-                this.isAlive = false;
-                return true; // Mark for removal from parent's activeCrackEffects array
+                this.glowingElement.setAttribute('opacity', 0); // Ensure glowing part is fully transparent
+                this.shadedElement.setAttribute('opacity', 1); // Ensure shaded part is fully opaque
+                this.isAlive = false; // Mark the *glowing effect* as complete
+                return true; // Signal that the *effect* is complete (glowing part is gone)
             }
 
-            // Interpolate opacity of the glowing crack element (fades from 1 to 0)
-            const currentOpacity = 1 - progress;
-            this.element.setAttribute('opacity', Math.max(0, currentOpacity)); // Ensure opacity doesn't go negative
+            // Fade out glowing crack
+            const currentGlowingOpacity = 1 - progress;
+            this.glowingElement.setAttribute('opacity', Math.max(0, currentGlowingOpacity));
+
+            // Fade in shaded crack
+            if (progress >= this.shadedFadeInStartProgress) {
+                const fadeInProgress = (progress - this.shadedFadeInStartProgress) / this.shadedFadeInDurationFactor;
+                // Fade from 0.5 to 1.0
+                const currentShadedOpacity = 0.5 + (0.5 * fadeInProgress); 
+                this.shadedElement.setAttribute('opacity', Math.min(1, Math.max(0.5, currentShadedOpacity)));
+            }
 
             return false;
         }
@@ -2127,7 +2185,7 @@
           shadedCrack.setAttribute('fill', shadedCrackColor); // Solid shaded color
           shadedCrack.setAttribute('stroke', 'none');
           shadedCrack.setAttribute('transform', `translate(${offsetX}, ${offsetY})`);
-          shadedCrack.setAttribute('opacity', 1); // Set final opacity for the shaded crack
+          shadedCrack.setAttribute('opacity', 0.5); // Start 50% transparent
           this.crackGroup.appendChild(shadedCrack);
 
           // Glowing crack (top layer)
@@ -2144,9 +2202,9 @@
           const globalStarburstOrigin = this.getGlobalCoordinates(starburstOriginX, starburstOriginY);
           createExplosion(globalStarburstOrigin.x, globalStarburstOrigin.y, this.size * 0.1, 'spark');
 
-          // Add CrackEffect for the glowing crack
           this.activeCrackEffects.push(new CrackEffect(
               glowingCrack,
+              shadedCrack, // Pass the shaded crack element
               glowingCrackFadeDuration
           ));
       }
@@ -2161,9 +2219,21 @@
         // This loop will run for the single starburst crack effect.
         for (let i = this.activeCrackEffects.length - 1; i >= 0; i--) {
             const effect = this.activeCrackEffects[i];
+            // Defensive check: ensure 'effect' itself is a valid object with an update method
+            if (!effect || typeof effect.update !== 'function') {
+                this.activeCrackEffects.splice(i, 1);
+                continue; // Skip to the next iteration
+            }
+
             if (effect.update()) { // If the effect is dead
-                if (effect.element.parentNode === this.crackGroup) { // Ensure it's still a child
-                    this.crackGroup.removeChild(effect.element);
+                // Defensive check: ensure 'glowingElement' exists and is a valid SVGElement
+                // before attempting to access its parentNode.
+                if (effect.glowingElement instanceof SVGElement) {
+                    // Check if it's still a child of the expected crackGroup
+                    // parentNode can be null if the element was already removed from DOM
+                    if (effect.glowingElement.parentNode === this.crackGroup) {
+                        this.crackGroup.removeChild(effect.glowingElement);
+                    }
                 }
                 this.activeCrackEffects.splice(i, 1);
             }
@@ -2231,18 +2301,6 @@
         }
         this.health -= damage;
 
-        // Play spark sound on hit (reduced volume to avoid cutting off laser sound)
-        playSpatialSound(sparkSoundBuffer, this.x, 0.2); // Play spark sound, even quieter
-
-        // Create a small, dissipating fireball on hit
-        let hitFireball = fireballPool.pop();
-        if (!hitFireball) {
-            hitFireball = new FireballEffect();
-        }
-        const hitFireballFinalSize = this.size * 0.5 * SCALE_FACTOR;
-        hitFireball.reset(impactX, impactY, hitFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, hitFireballFinalSize, 'visual'); // Removed durationMs
-        activeFireballs.push(hitFireball);
-
         // Create sparks at the impact point, inheriting asteroid's velocity, and flying back along the laser angle
         createExplosion(impactX, impactY, this.size * SCALE_FACTOR, 'spark', this.vx, this.vy, laserAngle);
 
@@ -2266,25 +2324,41 @@
         // Calculate pitch based on asteroid size: smaller asteroids get higher pitch
         const minOverallSize = MIN_ASTEROID_SIZE;
         const maxOverallSize = MAX_ASTEROID_SIZE;
-        const minTargetPitch = 0.05; // Pitch for largest objects (made even lower for very bassy sound)
-        const maxTargetPitch = 1.3; // Pitch for smallest objects
+        const minTargetPitch = 0.05; // Pitch for largest objects (very bassy)
+        const maxTargetPitch = 0.5; // Pitch for smallest objects (even deeper)
 
         const normalizedSize = (this.size - minOverallSize) / (maxOverallSize - minOverallSize);
         const clampedNormalizedSize = Math.max(0, Math.min(1, normalizedSize)); // Ensure value is between 0 and 1
         const basePitch = maxTargetPitch - (clampedNormalizedSize * (maxTargetPitch - minTargetPitch));
-        const finalPitch = basePitch * random(0.9, 1.1); // Add +/- 10% random variation
+        const finalPitch = basePitch; // Remove random variation for consistent descending pitch
+
+        // Set flags for destruction animation first, so totalAnimationDuration is available
+        this.isDestroyed = true;
+        this.destroyStartTime = Date.now();
+        
+        // Calculate durations based on constants and game speed
+        let effectiveGameSpeedMultiplier = gameSpeedMultiplier;
+        if (effectiveGameSpeedMultiplier === 0) {
+            effectiveGameSpeedMultiplier = 0.001; // Prevent division by zero
+        }
+        this.fadeDuration = ASTEROID_FADE_DURATION / effectiveGameSpeedMultiplier;
+        this.postFadeDuration = ASTEROID_POST_FADE_DURATION / effectiveGameSpeedMultiplier;
+        this.totalAnimationDuration = this.fadeDuration + this.postFadeDuration;
+
+        // Create a fireball effect for the asteroid explosion
+        let fireball = fireballPool.pop();
+        if (!fireball) {
+            fireball = new FireballEffect();
+        }
+        const asteroidExplosionFireballFinalSize = this.size * 1.5 * SCALE_FACTOR; // Fireball size relative to asteroid
+        // Pass the asteroid's total animation duration to the fireball to ensure it lasts as long as the asteroid fades
+        fireball.reset(this.x, this.y, asteroidExplosionFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, asteroidExplosionFireballFinalSize, 'visual', this.totalAnimationDuration);
+        activeFireballs.push(fireball);
 
         playSpatialSound(explosionBuffer, this.x, 1, finalPitch); 
         // Explosion particles should inherit asteroid's velocity
         createExplosion(this.x, this.y, this.size * SCALE_FACTOR, 'explosion', this.vx, this.vy);
 
-        let fireball = fireballPool.pop();
-        if (!fireball) {
-            fireball = new FireballEffect();
-        }
-        const asteroidExplosionFireballFinalSize = this.size * 1.2 * SCALE_FACTOR;
-        fireball.reset(this.x, this.y, asteroidExplosionFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, asteroidExplosionFireballFinalSize, 'visual'); // Removed durationMs
-        activeFireballs.push(fireball);
 
         // IMPORTANT: Do NOT remove from asteroids array here.
         // It will be removed by the main loop when update() returns true after animation.
@@ -2358,19 +2432,6 @@
                 gameplayLayer.removeChild(this.element); // Remove from gameplay layer
             }
         } else {
-            // Set flags for destruction animation
-            this.isDestroyed = true;
-            this.destroyStartTime = Date.now();
-            
-            // Calculate durations based on constants and game speed
-            let effectiveGameSpeedMultiplier = gameSpeedMultiplier;
-            if (effectiveGameSpeedMultiplier === 0) {
-                effectiveGameSpeedMultiplier = 0.001; // Prevent division by zero
-            }
-            this.fadeDuration = ASTEROID_FADE_DURATION / effectiveGameSpeedMultiplier;
-            this.postFadeDuration = ASTEROID_POST_FADE_DURATION / effectiveGameSpeedMultiplier;
-            this.totalAnimationDuration = this.fadeDuration + this.postFadeDuration;
-
             // Opacity and transform (including scale) will be updated continuously in the update method
             // No CSS transitions are applied to ensure smooth JS control.
         }
@@ -2470,11 +2531,7 @@
             this.shapeElement.removeAttribute('stroke');
             this.shapeElement.removeAttribute('stroke-width');
             // Removed rx and ry as they are for rect, not polygon
-            if (settings.laserShadow) {
-                this.shapeElement.setAttribute('filter', 'url(#laserGlow)');
-            } else {
-                this.shapeElement.removeAttribute('filter');
-            }
+            this.shapeElement.removeAttribute('filter'); // Ensure no filter from previous use
             // No initial dimensions for polygon here; points will be set in update()
         } else { // Defender laser
             this.initialWidth = 4.5 * SCALE_FACTOR; // Fixed width for defender (half current width)
@@ -2709,7 +2766,7 @@
 
             this.initialProjectileSize = 80 * SCALE_FACTOR; // Start large
             this.finalProjectileSize = 1 * SCALE_FACTOR; // Shrink to this size
-            this.explosionRadius = 600 * SCALE_FACTOR; // Further reduced radius of destruction for the nuke
+            this.explosionRadius = 1000 * SCALE_FACTOR; // Increased radius of destruction for the nuke
             this.speed = 5.0 / TARGET_FRAME_DURATION; // Speed remains the same
 
             this.vx = Math.cos(Math.atan2(targetY - startY, targetX - startX)) * this.speed;
@@ -2726,7 +2783,7 @@
             this.shapeElement.setAttribute('fill', 'url(#nukeGradient)'); // Use radial gradient
             this.shapeElement.removeAttribute('stroke'); // Remove stroke
             this.shapeElement.removeAttribute('stroke-width'); // Remove stroke-width
-            this.shapeElement.setAttribute('filter', 'url(#laserGlow)'); // Apply a glow filter
+            this.shapeElement.removeAttribute('filter'); // Remove glow filter
 
             // Append to gameplayLayer here to ensure it's on top of other elements when activated
             gameplayLayer.appendChild(this.element);
@@ -2770,7 +2827,7 @@
         }
 
         explode() {
-            playSpatialSound(nukeExplosionBuffer, this.x, 1.5); // Play nuke explosion sound, louder
+            playSpatialSound(nukeExplosionBuffer, this.x, 1.5, 0.7); // Play nuke explosion sound, louder, lower pitch
 
             // Trigger full-screen white flash
             if (nukeFlashElement) {
@@ -2856,15 +2913,18 @@
             this.element.setAttribute('cy', -9999);
         }
 
-        reset(x, y, initialRadius, finalRadius, type = 'visual') { // Removed durationMs parameter
+        reset(x, y, initialRadius, finalRadius, type = 'visual', explicitDurationMs = null) {
             this.x = x;
             this.y = y;
             this.initialRadius = initialRadius; // Initial radius of the fireball
             this.finalRadius = finalRadius; // Final radius the fireball expands to
+            this.explicitDurationMs = explicitDurationMs; // Store explicit duration if provided
+
             // Calculate originalDuration based on the expansion rate and total expansion amount
-            this.originalDuration = (this.finalRadius - this.initialRadius) / FIREBALL_EXPANSION_RATE_PX_PER_MS;
+            // This is used if no explicitDurationMs is provided.
+            this.calculatedDuration = (this.finalRadius - this.initialRadius) / FIREBALL_EXPANSION_RATE_PX_PER_MS;
             // Ensure a minimum duration to prevent instant disappearance for very small expansions
-            if (this.originalDuration < 10) this.originalDuration = 10; // Minimum 10ms
+            if (this.calculatedDuration < 10) this.calculatedDuration = 10; // Minimum 10ms
             
             this.startTime = Date.now();
             this.isAlive = true;
@@ -2889,7 +2949,9 @@
                 effectiveGameSpeedMultiplier = 0.001; // Prevent division by zero, make it extremely slow
             }
 
-            const effectiveDuration = this.originalDuration / effectiveGameSpeedMultiplier;
+            // Use explicit duration if provided, otherwise use calculated duration
+            const baseDuration = this.explicitDurationMs !== null ? this.explicitDurationMs : this.calculatedDuration;
+            const effectiveDuration = baseDuration / effectiveGameSpeedMultiplier;
             let progress = elapsed / effectiveDuration;
 
             if (progress >= 1) {
@@ -2943,13 +3005,13 @@
       constructor() {
         this.x = random(width * 0.2, width * 0.8);
         this.y = random(height * 0.2, height * 0.8);
-        this.size = random(30, 50) * SCALE_FACTOR; // Reduced size range for UFOs
+        this.size = random(60, 100) * SCALE_FACTOR; // Increased size range for UFOs
         this.currentVisualScale = 0.01; // Start very small for warp-in effect
         this.warpInStartTime = Date.now();
         this.warpInDuration = 1000 * SCALE_FACTOR / gameSpeedMultiplier; // 1 second warp-in duration, scaled
 
-        this.initialHealth = 500 * SCALE_FACTOR; // Increased UFO health
-        this.health = 500 * SCALE_FACTOR; // UFOs start with full health
+        this.initialHealth = 1000 * SCALE_FACTOR; // Increased UFO health
+        this.health = 1000 * SCALE_FACTOR; // UFOs start with full health
         // Convert velocities to per-millisecond for delta time scaling
         this.vx = random(-1.5, 1.5) / TARGET_FRAME_DURATION; // Increased speed
         this.vy = random(-1.5, 1.5) / TARGET_FRAME_DURATION; // Increased speed
@@ -2974,9 +3036,8 @@
         // Append messageGroup to healthBarGroup so it moves and positions relative to the health bar
         this.healthBarGroup.appendChild(this.messageGroup);
 
-        playSpatialSound(ufoBuffer, this.x); // Play UFO appearance sound with spatial audio
-        // Message display is now handled by spawnUFO() for the group and managed by queue
-        // this.displayMessage();
+        // Play UFO warp-in sound (reversed howl)
+        playSpatialSound(ufoWarpInSoundBuffer, this.x, 1.0, 1.0);
       }
 
       /**
@@ -3266,9 +3327,6 @@
         }
         this.health -= damage;
 
-        // Play spark sound on hit (reduced volume to avoid cutting off laser sound)
-        playSpatialSound(sparkSoundBuffer, this.x, 0.2); // Play spark sound, even quieter
-
         this.updateHealthBar(); // Update health bar on damage
 
         // Calculate health ratio to determine resistance
@@ -3301,15 +3359,28 @@
         // Calculate pitch based on UFO size: larger UFOs get lower pitch
         const minOverallSize = MIN_ASTEROID_SIZE; // Use asteroid min size as a reference for the smallest possible object
         const maxOverallSize = MAX_ASTEROID_SIZE; // Use asteroid max size as a reference for the largest possible object
-        const minTargetPitch = 0.05; // Pitch for largest objects (made even lower for very bassy sound)
-        const maxTargetPitch = 1.3; // Pitch for smallest objects
+        const minTargetPitch = 0.05; // Pitch for largest objects (very bassy)
+        const maxTargetPitch = 0.5; // Pitch for smallest objects (even deeper)
 
         const normalizedSize = (this.size - minOverallSize) / (maxOverallSize - minOverallSize);
         const clampedNormalizedSize = Math.max(0, Math.min(1, normalizedSize)); // Ensure value is between 0 and 1
         const basePitch = maxTargetPitch - (clampedNormalizedSize * (maxTargetPitch - minTargetPitch));
         const finalPitch = basePitch * random(0.9, 1.1); // Add +/- 10% random variation
 
-        playSpatialSound(explosionBuffer, this.x, 1, finalPitch); // Play explosion sound with spatial audio
+        // Create a fireball effect for the UFO explosion BEFORE parts are detached/removed
+        // This ensures the fireball appears on top of the UFO as it's being destroyed.
+        let fireball = fireballPool.pop();
+        if (!fireball) {
+            fireball = new FireballEffect();
+        }
+        const ufoExplosionFireballFinalSize = this.size * 3.0 * SCALE_FACTOR; // Increased size for UFO fireball
+        fireball.reset(this.x, this.y, ufoExplosionFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, ufoExplosionFireballFinalSize, 'visual');
+        // Override the fill for the UFO explosion fireball to use the brighter gradient
+        fireball.element.setAttribute('fill', 'url(#ufoExplosionFireballGradient)');
+        activeFireballs.push(fireball);
+
+        playSpatialSound(ufoExplosionHowlBuffer, this.x, 1.5, finalPitch); // Play UFO howl explosion sound, louder
+        playSpatialSound(explosionBuffer, this.x, 0.5, 0.1); // Overlay a deep explosion sound, quieter
         createExplosion(this.x, this.y, this.size * 1.8, 'explosion'); // Larger initial explosion
         createExplosion(this.x + random(-this.size*0.2, this.size*0.2), this.y + random(-this.size*0.2, this.size*0.2), this.size * 1.0, 'explosion'); // Second, slightly offset explosion
         createExplosion(this.x, this.y, this.size * 1.5, 'spark'); // Add sparks to the UFO explosion
@@ -3336,17 +3407,6 @@
             this.healthBarGroup.parentNode.removeChild(this.healthBarGroup);
         }
 
-        // Create a fireball effect for the UFO explosion BEFORE parts are detached/removed
-        // This ensures the fireball appears on top of the UFO as it's being destroyed.
-        let fireball = fireballPool.pop();
-        if (!fireball) {
-            fireball = new FireballEffect();
-        }
-        const ufoExplosionFireballFinalSize = this.size * 3.0 * SCALE_FACTOR; // Increased size for UFO fireball
-        fireball.reset(this.x, this.y, ufoExplosionFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, ufoExplosionFireballFinalSize, 'visual');
-        // Override the fill for the UFO explosion fireball to use the brighter gradient
-        fireball.element.setAttribute('fill', 'url(#ufoExplosionFireballGradient)');
-        activeFireballs.push(fireball);
 
         // Conditional part animation for quality levels
         if (currentQualityLevel === 'low') {
@@ -3625,22 +3685,22 @@
 
       if (type === 'explosion') {
         numParticles = settings.asteroidNumParticles;
-        particleSizeMin = baseSize * 0.1 * SCALE_FACTOR;
-        particleSizeMax = baseSize * 0.3 * SCALE_FACTOR;
+        particleSizeMin = baseSize * 0.05 * SCALE_FACTOR; // Reduced min size
+        particleSizeMax = baseSize * 0.1 * SCALE_FACTOR; // Reduced max size
         particleSpeedMin = 3 / TARGET_FRAME_DURATION; // Increased speed
         particleSpeedMax = 8 / TARGET_FRAME_DURATION; // Increased speed
-        particleLife = 30 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Reduced life to 0.5 seconds, scaled
+        particleLife = 40 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Increased life to ~0.66 seconds, scaled
       } else if (type === 'spark') {
         numParticles = settings.sparkNumParticles;
-        particleSizeMin = baseSize * 0.05 * SCALE_FACTOR; // Increased for more noticeable sparks
-        particleSizeMax = baseSize * 0.15 * SCALE_FACTOR; // Increased for more noticeable sparks
-        particleSpeedMin = 1.5 / TARGET_FRAME_DURATION; // Increased speed
-        particleSpeedMax = 4 / TARGET_FRAME_DURATION; // Increased speed
-        particleLife = 30 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Increased life to 0.5 seconds for better visibility, scaled
+        particleSizeMin = baseSize * 0.02 * SCALE_FACTOR; // Reduced min size
+        particleSizeMax = baseSize * 0.07 * SCALE_FACTOR; // Reduced max size
+        particleSpeedMin = 1.5 / TARGET_FRAME_DURATION; // Reverted speed
+        particleSpeedMax = 4 / TARGET_FRAME_DURATION; // Reverted speed
+        particleLife = 30 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Reverted life to 0.5 seconds, scaled
       } else if (type === 'nukeFireball') { // New: Nuke explosion particles
-        numParticles = 70; // Reduced number of particles for nuke explosion
-        particleSizeMin = baseSize * 0.05 * SCALE_FACTOR; // Larger particles
-        particleSizeMax = baseSize * 0.15 * SCALE_FACTOR; // Slightly reduced max size
+        numParticles = 30; // Further reduced number of particles for nuke explosion
+        particleSizeMin = baseSize * 0.03 * SCALE_FACTOR; // Reduced min size
+        particleSizeMax = baseSize * 0.07 * SCALE_FACTOR; // Reduced max size
         particleSpeedMin = 0.5 / TARGET_FRAME_DURATION; // Slower, lingering particles
         particleSpeedMax = 2 / TARGET_FRAME_DURATION;
         particleLife = 90 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Reduced life for fireball effect (1.5 seconds), scaled
@@ -3677,8 +3737,8 @@
         
         let angle, speed;
         if (type === 'spark' && incomingAngle !== null) {
-            // Sparks fly back along the incoming angle
-            angle = incomingAngle + Math.PI + random(-Math.PI / 8, Math.PI / 8); // Reverse direction with some spread
+            // Sparks fly mostly towards the incoming angle
+            angle = incomingAngle + random(-Math.PI / 8, Math.PI / 8); // Towards incoming direction with some spread
             speed = random(particleSpeedMin, particleSpeedMax);
         } else {
             // Random angle for other particle types
@@ -3818,10 +3878,14 @@
       if (ufos.length === 0) {
         const newUFO = new UFO();
         ufos.push(newUFO);
-        ufoMessageQueue.push(newUFO); // Add new UFO to the message queue
+        
+        // Delay adding the UFO to the message queue
+        const delayBeforeSpeech = newUFO.warpInDuration + (2000 / gameSpeedMultiplier); // Warp-in duration + 2 seconds (scaled)
+        setTimeout(() => {
+            ufoMessageQueue.push(newUFO); // Add new UFO to the message queue after delay
+            processUfoMessageQueue(); // Start processing the queue (will pick up this UFO)
+        }, delayBeforeSpeech);
       }
-      
-      processUfoMessageQueue(); // Start processing the queue
     }
 
     // --- Game Loop ---
@@ -3938,12 +4002,7 @@
             if (asteroid.element.parentNode) {
                 gameplayLayer.removeChild(asteroid.element); // Remove from gameplay layer
             }
-            // Remove all active crack effects' elements
-            asteroid.activeCrackEffects.forEach(effect => {
-                if (effect.element.parentNode) {
-                    effect.element.parentNode.removeChild(effect.element);
-                }
-            });
+            // It's still good practice to clear the array since the asteroid object is being discarded.
             asteroid.activeCrackEffects = []; // Clear the array
 
             asteroids.splice(i, 1); // Remove from array
@@ -4232,18 +4291,24 @@
         lasers.push(laser);
       });
       // Play user laser sound with spatial audio and an even wider pitch variation
-      playSpatialSound(userLaserBuffer, event.clientX, 0.5, random(0.7, 1.3)); // Reduced volume to 0.5
+      playSpatialSound(userLaserBuffer, event.clientX, 1.0, 1.0); // Fixed pitch for consistent descending sweep
     });
 
+    // Hamburger menu event listeners
+    hamburgerMenuIcon.addEventListener('click', () => {
+        sideMenu.classList.toggle('open');
+    });
+
+    // Existing button event listeners (now inside the menu or bottom controls)
     qualityToggleBtn.addEventListener('click', cycleQuality);
-    muteToggleBtn.addEventListener('click', toggleMute); // Add event listener for mute button
-    pauseToggleBtn.addEventListener('click', togglePause); // Add event listener for pause button
-    dateTimeToggleBtn.addEventListener('click', toggleDateTimeDisplay); // Add event listener for date/time toggle
-    perfStatsToggleBtn.addEventListener('click', togglePerfStatsDisplay); // Add event listener for perf stats toggle
+    muteToggleBtn.addEventListener('click', toggleMute);
+    pauseToggleBtn.addEventListener('click', togglePause);
+    dateTimeToggleBtn.addEventListener('click', toggleDateTimeDisplay);
+    perfStatsToggleBtn.addEventListener('click', togglePerfStatsDisplay);
 
     speedSlider.addEventListener('input', (event) => {
         const sliderValue = parseInt(event.target.value);
-        gameSpeedMultiplier = sliderValue / 100; // Convert 0-100 to 0.0-1.0
+        gameSpeedMultiplier = sliderValue / 100;
         speedValueSpan.textContent = `${sliderValue}%`;
 
         // Update time-based properties for all active defenders
@@ -4310,7 +4375,7 @@
         laserBuffer = await decodeAudio(generateToneSweep(150, 1200, 400)); // Defender laser: Higher pitch sweep
       } catch (e) { console.error("Failed to load laserBuffer:", e); }
       try {
-        userLaserBuffer = await decodeAudio(generateHarmonicToneSweep(200, 1200, 400, [1, 1.25, 1.5])); // Higher pitch for user laser (increased start/end freqs)
+        userLaserBuffer = await decodeAudio(generateHarmonicToneSweep(600, 1200, 400, [1, 1.25, 1.5])); // Further increased duration for user laser
       } catch (e) { console.error("Failed to load userLaserBuffer:", e); }
       try {
         explosionBuffer = await decodeAudio(generateNoiseBurst(500, 1.5)); // Shorter duration for quicker explosions
@@ -4319,15 +4384,32 @@
         ufoBuffer = await decodeAudio(generateHum(1000, 50)); // Low, sustained hum
       } catch (e) { console.error("Failed to load ufoBuffer:", e); }
       try {
+        // UFO explosion howl: a longer, descending harmonic sweep
+        ufoExplosionHowlBuffer = await decodeAudio(generateHarmonicToneSweep(125, 800, 100, [1, 1.5, 2.0])); // Doubled duration for UFO howl
+        // Create reversed version for UFO warp-in sound
+        ufoWarpInSoundBuffer = audioCtx.createBuffer(
+            ufoExplosionHowlBuffer.numberOfChannels,
+            ufoExplosionHowlBuffer.length,
+            ufoExplosionHowlBuffer.sampleRate
+        );
+        for (let i = 0; i < ufoExplosionHowlBuffer.numberOfChannels; i++) {
+            const originalChannelData = ufoExplosionHowlBuffer.getChannelData(i);
+            const reversedChannelData = ufoWarpInSoundBuffer.getChannelData(i);
+            for (let j = 0; j < originalChannelData.length; j++) {
+                reversedChannelData[j] = originalChannelData[originalChannelData.length - 1 - j];
+            }
+        }
+      } catch (e) { console.error("Failed to load ufoExplosionHowlBuffer or create ufoWarpInSoundBuffer:", e); }
+      try {
         // Higher pitch, shorter, more impactful descending chord for nuke launch
-        // Start high (1500Hz), end lower (200Hz), duration 700ms, with a dissonant chord
-        nukeLaunchBuffer = await decodeAudio(generateHarmonicToneSweep(700, 1500, 200, [1, 1.122, 1.335, 1.5])); // Root, minor second, perfect fourth, perfect fifth (more dissonant)
+        // Start high (800Hz), end lower (100Hz), duration 700ms, with a dissonant chord
+        nukeLaunchBuffer = await decodeAudio(generateHarmonicToneSweep(700, 800, 100, [1, 1.122, 1.335, 1.5])); // Root, minor second, perfect fourth, perfect fifth (more dissonant)
       } catch (e) { console.error("Failed to load nukeLaunchBuffer:", e); }
       try {
         nukeExplosionBuffer = await decodeAudio(generateNoiseBurst(700, 1.2)); // Shorter duration for quicker nuke explosions
       } catch (e) { console.error("Failed to load nukeExplosionBuffer:", e); }
       try {
-        sparkSoundBuffer = await decodeAudio(generateSparkSound(100)); // Load the new spark sound (100ms duration)
+        sparkSoundBuffer = await decodeAudio(generateSparkSound(200)); // Increased duration for more noticeable effect
       } catch (e) { console.error("Failed to load sparkSoundBuffer:", e); }
       try {
         aggregationSoundBuffer = await decodeAudio(generateSparkSound(50)); // A very short spark/fizz for aggregation
@@ -4401,6 +4483,11 @@
       }
       
       setInterval(updateDateTimeDisplay, 1000); // Update every second
+
+      // Set initial lastUfoSpawnTime to ensure a 5-second delay before the first UFO spawns
+      // This calculates a past time such that Date.now() - lastUfoSpawnTime will be (ufoSpawnInterval / gameSpeedMultiplier) - 5000
+      // It will then take 5000ms for Date.now() to increase enough to trigger the first spawn.
+      lastUfoSpawnTime = Date.now() - (ufoSpawnInterval / gameSpeedMultiplier) + 5000;
 
       // Start the animation loop
       requestAnimationFrame(update);
