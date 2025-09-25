@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>Planetary Defense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   /* Custom styles for UI elements, replacing Tailwind CSS */
@@ -31,6 +34,11 @@
     background-color: black; /* Pure black space background */
     border-radius: 10px; /* Rounded corners for the canvas area */
     z-index: 1; /* Place above stars (z-index: 0) */
+    touch-action: none; /* Prevent default gestures for smoother input */
+  }
+  /* Hint simpler rendering for star shapes */
+  #starsLayer {
+    shape-rendering: optimizeSpeed;
   }
   #dateTimeDisplay {
     position: absolute;
@@ -303,18 +311,18 @@
   <svg id="spaceCanvas" width="100%" height="100%">
     <defs>
       <linearGradient id="userLaserGradient" x1="0%" y1="50%" x2="100%" y2="50%">
-        <stop offset="0%" stop-color="rgba(0, 255, 0, 0)"/> <!-- Fully transparent at the tail -->
-        <stop offset="50%" stop-color="rgba(100, 255, 100, 1)"/> <!-- Bright center -->
-        <stop offset="100%" stop-color="rgba(0, 255, 0, 1)"/> <!-- Fully opaque green at the head -->
+        <stop offset="0%" stop-color="#00FF00" stop-opacity="0"/> <!-- Fully transparent at the tail -->
+        <stop offset="50%" stop-color="#64FF64" stop-opacity="1"/> <!-- Bright center -->
+        <stop offset="100%" stop-color="#00FF00" stop-opacity="1"/> <!-- Fully opaque green at the head -->
       </linearGradient>
       <linearGradient id="satelliteLaserGradient" x1="0%" y1="50%" x2="100%" y2="50%">
-        <stop offset="0%" stop-color="rgba(255, 0, 0, 0.3)"/> <!-- More transparent red at ends -->
-        <stop offset="50%" stop-color="rgba(255, 255, 255, 1)"/> <!-- Brightest white in center -->
-        <stop offset="100%" stop-color="rgba(255, 0, 0, 0.3)"/> <!-- More transparent red at ends -->
+        <stop offset="0%" stop-color="#FF0000" stop-opacity="0.3"/> <!-- More transparent red at ends -->
+        <stop offset="50%" stop-color="#FFFFFF" stop-opacity="1"/> <!-- Brightest white in center -->
+        <stop offset="100%" stop-color="#FF0000" stop-opacity="0.3"/> <!-- More transparent red at ends -->
       </linearGradient>
       <!-- Generic glow filter for cracks -->
       <filter id="crackGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="0" stdDeviation="15" flood-color="rgba(255, 0, 0, 0.8)"/>
+          <feDropShadow dx="0" dy="0" stdDeviation="15" flood-color="#FF0000" flood-opacity="0.8"/>
       </filter>
       <!-- Asteroid Gradients for varied appearance -->
       <radialGradient id="asteroidGradientGrey" cx="50%" cy="50%" r="50%" fx="60%" fy="40%">
@@ -334,31 +342,31 @@
       </radialGradient>
       <!-- Nuke Projectile Gradient -->
       <radialGradient id="nukeGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-        <stop offset="0%" stop-color="rgba(255, 255, 0, 1)"/>
-        <stop offset="30%" stop-color="rgba(255, 165, 0, 0.8)"/>
-        <stop offset="100%" stop-color="rgba(255, 0, 0, 0.1)"/>
+        <stop offset="0%" stop-color="#FFFF00" stop-opacity="1"/>
+        <stop offset="30%" stop-color="#FFA500" stop-opacity="0.8"/>
+        <stop offset="100%" stop-color="#FF0000" stop-opacity="0.1"/>
       </radialGradient>
       <!-- Nuke Fireball Gradient (More Transparent) -->
       <radialGradient id="fireballGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-        <stop offset="0%" stop-color="rgba(255, 255, 200, 0.6)"/> <!-- Reduced opacity -->
-        <stop offset="20%" stop-color="rgba(255, 200, 0, 0.5)"/>  <!-- Reduced opacity -->
-        <stop offset="50%" stop-color="rgba(255, 100, 0, 0.3)"/>  <!-- Reduced opacity -->
-        <stop offset="80%" stop-color="rgba(200, 50, 0, 0.1)"/>   <!-- Reduced opacity -->
-        <stop offset="100%" stop-color="rgba(100, 0, 0, 0)"/>
+        <stop offset="0%" stop-color="#FFFFC8" stop-opacity="0.6"/> <!-- Reduced opacity -->
+        <stop offset="20%" stop-color="#FFC800" stop-opacity="0.5"/>  <!-- Reduced opacity -->
+        <stop offset="50%" stop-color="#FF6400" stop-opacity="0.3"/>  <!-- Reduced opacity -->
+        <stop offset="80%" stop-color="#C83200" stop-opacity="0.1"/>   <!-- Reduced opacity -->
+        <stop offset="100%" stop-color="#640000" stop-opacity="0"/>
       </radialGradient>
       <!-- Brighter Fireball Gradient for UFO Explosions -->
       <radialGradient id="ufoExplosionFireballGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-        <stop offset="0%" stop-color="rgba(255, 255, 255, 1)"/>    <!-- Pure white, fully opaque -->
-        <stop offset="10%" stop-color="rgba(255, 255, 150, 1)"/>   <!-- Bright yellow, fully opaque -->
-        <stop offset="30%" stop-color="rgba(255, 180, 0, 0.9)"/>   <!-- Bright orange, high opacity -->
-        <stop offset="60%" stop-color="rgba(255, 80, 0, 0.7)"/>    <!-- Red-orange, medium opacity -->
-        <stop offset="100%" stop-color="rgba(100, 0, 0, 0)"/>      <!-- Transparent red -->
+        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>    <!-- Pure white, fully opaque -->
+        <stop offset="10%" stop-color="#FFFF96" stop-opacity="1"/>   <!-- Bright yellow, fully opaque -->
+        <stop offset="30%" stop-color="#FFB400" stop-opacity="0.9"/>   <!-- Bright orange, high opacity -->
+        <stop offset="60%" stop-color="#FF5000" stop-opacity="0.7"/>    <!-- Red-orange, medium opacity -->
+        <stop offset="100%" stop-color="#640000" stop-opacity="0"/>      <!-- Transparent red -->
       </radialGradient>
       <!-- Crack Gradient (Bright Yellow center, Red edges) -->
       <radialGradient id="crackGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-        <stop offset="0%" stop-color="rgba(255, 255, 0, 0.4)"/>    <!-- Bright Yellow, more transparent -->
-        <stop offset="50%" stop-color="rgba(255, 165, 0, 0.2)"/> <!-- Orange, more transparent -->
-        <stop offset="100%" stop-color="rgba(255, 0, 0, 0.05)"/>  <!-- Red, more transparent -->
+        <stop offset="0%" stop-color="#FFFF00" stop-opacity="0.4"/>    <!-- Bright Yellow, more transparent -->
+        <stop offset="50%" stop-color="#FFA500" stop-opacity="0.2"/> <!-- Orange, more transparent -->
+        <stop offset="100%" stop-color="#FF0000" stop-opacity="0.05"/>  <!-- Red, more transparent -->
       </radialGradient>
       <!-- Defender Gradient (Purple-Blue - More Pronounced) -->
       <radialGradient id="defenderGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -369,9 +377,9 @@
       </radialGradient>
       <!-- Main Thruster Fire Gradient (Yellow to Red) -->
       <radialGradient id="mainThrusterFireGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-        <stop offset="0%" stop-color="rgba(255, 255, 0, 1)"/>    <!-- Bright Yellow -->
-        <stop offset="50%" stop-color="rgba(255, 165, 0, 0.8)"/> <!-- Orange -->
-        <stop offset="100%" stop-color="rgba(255, 0, 0, 0)"/>    <!-- Transparent Red -->
+        <stop offset="0%" stop-color="#FFFF00" stop-opacity="1"/>    <!-- Bright Yellow -->
+        <stop offset="50%" stop-color="#FFA500" stop-opacity="0.8"/> <!-- Orange -->
+        <stop offset="100%" stop-color="#FF0000" stop-opacity="0"/>    <!-- Transparent Red -->
       </radialGradient>
       <!-- Defender Thruster Pod Gradient (Blue to Black) -->
       <radialGradient id="defenderThrusterPodGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -380,8 +388,8 @@
       </radialGradient>
       <!-- RCS Thruster Fire Gradient (Light Blue to Transparent) -->
       <radialGradient id="rcsThrusterFireGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-        <stop offset="0%" stop-color="rgba(173, 216, 230, 0.8)"/> <!-- Light Blue -->
-        <stop offset="100%" stop-color="rgba(173, 216, 230, 0)"/> <!-- Transparent Light Blue -->
+        <stop offset="0%" stop-color="#ADD8E6" stop-opacity="0.8"/> <!-- Light Blue -->
+        <stop offset="100%" stop-color="#ADD8E6" stop-opacity="0"/> <!-- Transparent Light Blue -->
       </radialGradient>
     </defs>
     <g id="starsLayer"></g>
@@ -400,11 +408,41 @@
   <!-- Side Menu -->
   <div id="side-menu" class="side-menu">
     <button id="qualityToggle" class="side-menu-button">Quality: High</button>
+    <button id="qualityModeToggle" class="side-menu-button">Auto Quality: Off</button>
+    <button id="ttsToggle" class="side-menu-button">TTS: Off</button>
+    <div class="side-menu-slider-container">
+      <label for="ttsVoiceSelect" class="side-menu-label">Voice:</label>
+      <select id="ttsVoiceSelect" class="side-menu-slider" style="height:auto; padding:4px; width: 140px;"></select>
+    </div>
+    <div class="side-menu-slider-container">
+      <span class="side-menu-label">TTS Voices:</span>
+      <span id="ttsVoicesStatus" class="side-menu-value">0</span>
+    </div>
     <button id="perfStatsToggleBtn" class="side-menu-button">Perf Stats: Off</button>
     <div class="side-menu-slider-container">
       <label for="speedSlider" class="side-menu-label">Speed:</label>
       <input type="range" id="speedSlider" min="0" max="100" value="100" class="side-menu-slider">
       <span id="speedValue" class="side-menu-value">100%</span>
+    </div>
+    <div class="side-menu-slider-container">
+      <label for="autoLowFps" class="side-menu-label">Auto Low FPS:</label>
+      <input type="range" id="autoLowFps" min="30" max="59" value="45" class="side-menu-slider">
+      <span id="autoLowFpsValue" class="side-menu-value">45</span>
+    </div>
+    <div class="side-menu-slider-container">
+      <label for="autoLowStreak" class="side-menu-label">Low Streak s:</label>
+      <input type="range" id="autoLowStreak" min="1" max="10" value="3" class="side-menu-slider">
+      <span id="autoLowStreakValue" class="side-menu-value">3s</span>
+    </div>
+    <div class="side-menu-slider-container">
+      <label for="autoHighFps" class="side-menu-label">Auto High FPS:</label>
+      <input type="range" id="autoHighFps" min="40" max="60" value="57" class="side-menu-slider">
+      <span id="autoHighFpsValue" class="side-menu-value">57</span>
+    </div>
+    <div class="side-menu-slider-container">
+      <label for="autoHighStreak" class="side-menu-label">High Streak s:</label>
+      <input type="range" id="autoHighStreak" min="1" max="10" value="5" class="side-menu-slider">
+      <span id="autoHighStreakValue" class="side-menu-value">5s</span>
     </div>
     <div id="perfStats" class="side-menu-perf-stats"></div>
   </div>
@@ -439,6 +477,7 @@
     const dateTimeDisplay = document.getElementById('dateTimeDisplay'); // New: Get date/time display div
     // Moved perfStatsDiv inside side-menu, so its reference needs to be updated
     const qualityToggleBtn = document.getElementById('qualityToggle');
+    const qualityModeToggleBtn = document.getElementById('qualityModeToggle');
     const dateTimeToggleBtn = document.getElementById('dateTimeToggleBtn'); // New: Get date/time toggle button
     const muteToggleBtn = document.getElementById('muteToggle'); // Get the new mute button
     const speakerIcon = document.getElementById('speaker-icon');
@@ -455,8 +494,20 @@
 
     const nukeButton = document.getElementById('nukeButton'); // Get the new nuke button
     const perfStatsToggleBtn = document.getElementById('perfStatsToggleBtn'); // New: Get perf stats toggle button
+    const ttsToggleBtn = document.getElementById('ttsToggle');
     const speedSlider = document.getElementById('speedSlider'); // New: Get speed slider
     const speedValueSpan = document.getElementById('speedValue'); // New: Get speed value display
+    // Auto-quality controls
+    const autoLowFpsSlider = document.getElementById('autoLowFps');
+    const autoLowFpsValue = document.getElementById('autoLowFpsValue');
+    const autoLowStreakSlider = document.getElementById('autoLowStreak');
+    const autoLowStreakValue = document.getElementById('autoLowStreakValue');
+    const autoHighFpsSlider = document.getElementById('autoHighFps');
+    const autoHighFpsValue = document.getElementById('autoHighFpsValue');
+    const autoHighStreakSlider = document.getElementById('autoHighStreak');
+    const autoHighStreakValue = document.getElementById('autoHighStreakValue');
+    const ttsVoiceSelect = document.getElementById('ttsVoiceSelect');
+    const ttsVoicesStatus = document.getElementById('ttsVoicesStatus');
 
     // New: Hamburger menu elements
     const hamburgerMenuIcon = document.getElementById('hamburger-menu-icon');
@@ -468,7 +519,11 @@
     canvas.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
     // Define SVG layers
-    let starsLayer; // Reference to the SVG group for stars
+    let starsScrollGroup; // New: Parent group that scrolls the tiled star layers
+    let starsLayer; // Base stars group (0,0)
+    let starsLayerLeft; // Tiled copy translated by (-width, 0)
+    let starsLayerUp; // Tiled copy translated by (0, -height)
+    let starsLayerUpLeft; // Tiled copy translated by (-width, -height)
     let gameplayLayer; // Reference to the SVG group for gameplay elements
     let effectsLayer; // Reference to the SVG group for effects
     let nukeFlashLayer; // New: Reference to the SVG group for the nuke flash
@@ -490,6 +545,9 @@
     let starfieldVy = 0;
     let starfieldTargetVx = 0;
     let starfieldTargetVy = 0;
+    // New: group translation offsets for stars layer
+    let starfieldOffsetX = 0;
+    let starfieldOffsetY = 0;
     const starfieldDirectionChangeInterval = 15000; // Change target direction every 15 seconds
     const starfieldDirectionChangeDuration = 5000; // Transition to new direction over 5 seconds
     let lastStarfieldDirectionChangeTime = 0; // When the *interval* timer last reset
@@ -518,7 +576,7 @@
     const fireballPool = []; // New: Pool for fireball effects
     const MAX_LASERS = 50; // Max concurrent lasers in pool
     const MAX_NUKES = 1; // Only one nuke projectile at a time
-    const MAX_PARTICLES = 100; // Max concurrent particles in pool (reduced for performance)
+    const MAX_PARTICLES = 1000; // Max pooled particle SVGs we pre-create
     const MAX_FIREBALLS = 5; // Max concurrent fireball effects (should be low)
 
     const SCALE_FACTOR = 0.75; // All object sizes will be scaled by this factor
@@ -527,6 +585,8 @@
     const activeParticles = []; // New: To manage all active explosion/spark particles
     const activeFireballs = []; // New: To manage active fireball effects
     const explodingUfoParts = []; // New: To manage detached UFO parts during destruction
+    const MAX_ACTIVE_PARTICLES = 2000; // Hard cap for simultaneous explosion/spark particles
+    const PARTICLE_OVERFLOW_HEADROOM_RATIO = 0.1; // Trim a little extra when culling particles
 
     // Game state variables
     let isMuted = false;
@@ -549,6 +609,91 @@
     let lastFpsUpdateTime = 0; // Time when FPS was last updated
     let fps = 0;
     let frameCount = 0;
+
+    // Web Speech API (TTS) state
+    let ttsEnabled = false;
+    let ttsVoice = null;
+    let ttsVoices = [];
+    let selectedVoiceURI = null;
+
+    function selectAlienVoice(voices) {
+        if (!voices || !voices.length) return null;
+        // Prioritize voices that sound synthetic/alien on common platforms
+        const preferredNames = [
+            'Zarvox', 'Trinoids', 'Whisper', 'Bad News', 'Pipe Organ', 'Cellos', 'Fred', 'Boing', 'Junior'
+        ];
+        // Try exact preferred names first
+        for (const name of preferredNames) {
+            const v = voices.find(vo => (vo.name || '').toLowerCase() === name.toLowerCase());
+            if (v) return v;
+        }
+        // Then any voice whose name hints at robot/alien
+        const hinted = voices.find(vo => /alien|robot|whisper|electro|vocoder|trinoid|zarvox/i.test(vo.name));
+        if (hinted) return hinted;
+        // Fallback: an English voice if available
+        const en = voices.find(vo => /en[-_]/i.test(vo.lang));
+        if (en) return en;
+        // Final fallback: first voice
+        return voices[0];
+    }
+
+    function populateTtsVoiceList() {
+        if (!('speechSynthesis' in window)) {
+            const status = document.getElementById('ttsVoicesStatus');
+            if (status) status.textContent = '0';
+            const sel = document.getElementById('ttsVoiceSelect');
+            if (sel) sel.disabled = true;
+            return;
+        }
+        ttsVoices = window.speechSynthesis.getVoices() || [];
+        const status = document.getElementById('ttsVoicesStatus');
+        if (status) status.textContent = String(ttsVoices.length);
+        const sel = document.getElementById('ttsVoiceSelect');
+        if (!sel) return;
+
+        // Rebuild options
+        sel.innerHTML = '';
+        ttsVoices.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.voiceURI || v.name || Math.random().toString(36).slice(2);
+            opt.textContent = `${v.name || 'Voice'} (${v.lang || 'unknown'})`;
+            sel.appendChild(opt);
+        });
+        sel.disabled = ttsVoices.length === 0;
+
+        // Choose current voice
+        let chosen = null;
+        if (selectedVoiceURI) {
+            chosen = ttsVoices.find(v => v.voiceURI === selectedVoiceURI);
+        }
+        if (!chosen) {
+            chosen = selectAlienVoice(ttsVoices);
+            selectedVoiceURI = chosen ? chosen.voiceURI : null;
+        }
+        ttsVoice = chosen || null;
+
+        // Reflect selection in UI
+        if (ttsVoice) sel.value = ttsVoice.voiceURI;
+    }
+
+    function speakUfoTextWithTTS(text) {
+        if (!('speechSynthesis' in window)) return false;
+        try {
+            if (!ttsVoice) refreshTtsVoice();
+            const utter = new SpeechSynthesisUtterance(text);
+            if (ttsVoice) utter.voice = ttsVoice;
+            utter.lang = (ttsVoice && ttsVoice.lang) ? ttsVoice.lang : 'en-US';
+            // Make it sound eerie: slower rate, lower pitch, moderate volume
+            utter.rate = Math.max(0.6, Math.min(1.0, 0.8 * gameSpeedMultiplier + 0.2));
+            utter.pitch = 0.6; // lower for ominous tone
+            utter.volume = 1.0;
+            window.speechSynthesis.speak(utter);
+            return true;
+        } catch (e) {
+            console.warn('TTS speak failed:', e);
+            return false;
+        }
+    }
 
     // Performance monitoring variables
     const accumulatedPerformanceData = {
@@ -641,25 +786,19 @@
         if (!audioContextInitialized) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             audioContextInitialized = true;
-            // Attempt to resume immediately, but it might fail without user gesture
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume().then(() => {
-                    console.log('AudioContext resumed on init (if allowed by browser).');
-                    audioContextResumed = true;
-                }).catch(e => {
-                    console.warn('AudioContext resume failed on init:', e);
-                    // It's suspended, will need user gesture
-                });
-            } else {
-                audioContextResumed = true; // Already running or started running
-            }
+            // Do not auto-resume here; many browsers require a user gesture.
+            audioContextResumed = (audioCtx.state === 'running');
         }
         return audioCtx;
     }
 
     // Global listener for first user interaction to resume audio context
     function resumeAudioContextOnFirstInteraction() {
-        if (!audioContextResumed && audioCtx && audioCtx.state === 'suspended') {
+        // Ensure context exists
+        if (!audioContextInitialized) {
+            getAudioContext();
+        }
+        if (!audioContextResumed && audioCtx && audioCtx.state !== 'running') {
             audioCtx.resume().then(() => {
                 console.log('AudioContext resumed by user gesture.');
                 audioContextResumed = true;
@@ -674,7 +813,7 @@
 
     // Add event listeners to the body to catch the first interaction
     document.body.addEventListener('click', resumeAudioContextOnFirstInteraction);
-    document.body.addEventListener('touchstart', resumeAudioContextOnFirstInteraction);
+    document.body.addEventListener('touchstart', resumeAudioContextOnFirstInteraction, { passive: true });
 
 
     /**
@@ -802,14 +941,25 @@
 
     // --- Quality Control Settings ---
     const qualityLevels = ['high', 'medium', 'low'];
-    let currentQualityIndex = 0; // Index for qualityLevels array
-    let currentQualityLevel = qualityLevels[currentQualityIndex];
+    let currentQualityIndex = 0; // Index for manual cycling
+    let currentQualityLevel = qualityLevels[currentQualityIndex]; // Currently applied quality
+    let qualityMode = 'manual'; // 'manual' | 'auto'
+
+    // Auto-quality configuration
+    let AUTO_LOW_THRESHOLD_FPS = 45; // downgrade if below for sustained seconds
+    let AUTO_LOW_STREAK_SECONDS = 3;
+    let AUTO_HIGH_THRESHOLD_FPS = 57; // upgrade if above for sustained seconds
+    let AUTO_HIGH_STREAK_SECONDS = 5;
+    const AUTO_ADJUST_MIN_INTERVAL_MS = 5000; // min dwell between adjustments
+    let autoLowStreak = 0;
+    let autoHighStreak = 0;
+    let autoLastAdjustTime = 0;
 
     const qualitySettings = {
       'high': {
         starCount: 300, // Reverted to original star count
-        asteroidNumParticles: 8,
-        sparkNumParticles: 15, // Increased
+        asteroidNumParticles: 15,
+        sparkNumParticles: 10, // Tuned for balanced debris
         defenderFireInterval: [1200, 4000],
         laserLifeDefender: 200 * TARGET_FRAME_DURATION, // This value is a base, scaled when used in Laser.reset
         laserTransitionDuration: '0.1s',
@@ -819,14 +969,14 @@
         ufoMessageShadow: true,
         ufoMessageTransition: '3s ease-in-out',
         particleAggregationGridSize: 50,
-        particleAggregationThreshold: 8, // Re-enable aggregation
+        particleAggregationThreshold: 9999, // Effectively disable aggregation for richer particle trails
         aggregatedParticleEffectSize: 40,
         aggregatedParticleEffectDuration: 600 / gameSpeedMultiplier // Scaled
       },
       'medium': {
         starCount: 150, // Reverted to original star count
-        asteroidNumParticles: 5,
-        sparkNumParticles: 10, // Reverted
+        asteroidNumParticles: 10,
+        sparkNumParticles: 7, // Moderated spark density
         defenderFireInterval: [2000, 6000],
         laserLifeDefender: 150 * TARGET_FRAME_DURATION, // This value is a base, scaled when used in Laser.reset
         laserTransitionDuration: '0.05s',
@@ -836,14 +986,14 @@
         ufoMessageShadow: true,
         ufoMessageTransition: '2s ease-in-out',
         particleAggregationGridSize: 70,
-        particleAggregationThreshold: 6, // Reverted
+        particleAggregationThreshold: 9999, // Effectively disable aggregation for richer particle trails
         aggregatedParticleEffectSize: 30,
         aggregatedParticleEffectDuration: 500 / gameSpeedMultiplier // Scaled
       },
       'low': {
         starCount: 50, // Reverted to original star count
-        asteroidNumParticles: 1,
-        sparkNumParticles: 3, // Reverted
+        asteroidNumParticles: 6,
+        sparkNumParticles: 3, // Lightest setting for low quality
         defenderFireInterval: [3200, 8000],
         laserLifeDefender: 100 * TARGET_FRAME_DURATION, // This value is a base, scaled when used in Laser.reset
         laserTransitionDuration: '0s',
@@ -853,7 +1003,7 @@
         ufoMessageShadow: false,
         ufoMessageTransition: '0s',
         particleAggregationGridSize: 100,
-        particleAggregationThreshold: 4, // Reverted
+        particleAggregationThreshold: 9999, // Effectively disable aggregation for richer particle trails
         aggregatedParticleEffectSize: 20,
         aggregatedParticleEffectDuration: 400 / gameSpeedMultiplier // Scaled
       }
@@ -883,11 +1033,52 @@
     /**
      * Cycles through the rendering quality levels.
      */
-    function cycleQuality() {
-      currentQualityIndex = (currentQualityIndex + 1) % qualityLevels.length;
-      currentQualityLevel = qualityLevels[currentQualityIndex];
-      qualityToggleBtn.textContent = `Quality: ${currentQualityLevel.charAt(0).toUpperCase() + currentQualityLevel.slice(1)}`;
+    function capitalizeWord(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    function updateQualityButtonText() {
+      if (qualityMode === 'auto') {
+        qualityToggleBtn.textContent = `Quality: Auto (${capitalizeWord(currentQualityLevel)})`;
+      } else {
+        qualityToggleBtn.textContent = `Quality: ${capitalizeWord(currentQualityLevel)}`;
+      }
+    }
+
+    function updateQualityModeButtonText() {
+      const onOff = qualityMode === 'auto' ? 'On' : 'Off';
+      qualityModeToggleBtn.textContent = `Auto Quality: ${onOff}`;
+    }
+
+    function toggleQualityMode() {
+      qualityMode = (qualityMode === 'auto') ? 'manual' : 'auto';
+      autoLastAdjustTime = Date.now(); // avoid immediate toggles
+      updateQualityButtonText();
+      updateQualityModeButtonText();
+    }
+
+    function setQualityLevel(newLevel) {
+      if (newLevel === currentQualityLevel) { updateQualityButtonText(); return; }
+      currentQualityLevel = newLevel;
       applyQualitySettings();
+      updateQualityButtonText();
+    }
+
+    function cycleQuality() {
+      if (qualityMode === 'manual') {
+        currentQualityIndex = (currentQualityIndex + 1);
+        if (currentQualityIndex >= qualityLevels.length) {
+          // Switch to Auto
+          qualityMode = 'auto';
+          currentQualityIndex = qualityLevels.indexOf(currentQualityLevel); // preserve manual index
+          updateQualityButtonText();
+          return;
+        }
+        setQualityLevel(qualityLevels[currentQualityIndex]);
+      } else {
+        // Switch back to Manual at current index
+        qualityMode = 'manual';
+        currentQualityIndex = qualityLevels.indexOf(currentQualityLevel);
+        updateQualityButtonText();
+      }
     }
 
     /**
@@ -901,6 +1092,7 @@
                 isMuted = true;
                 speakerIcon.style.display = ''; // Keep speaker visible
                 mutedSpeakerIcon.style.display = ''; // Show slash
+                if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
             }).catch(e => {
                 console.error('Failed to suspend AudioContext:', e);
             });
@@ -933,6 +1125,7 @@
             if (ctx.state === 'running') {
                 ctx.suspend();
             }
+            if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
         } else {
             if (ctx.state === 'suspended' && !isMuted) { // Only resume if not globally muted
                 ctx.resume();
@@ -2590,9 +2783,18 @@
         if (!fireball) {
             fireball = new FireballEffect();
         }
-        const asteroidExplosionFireballFinalSize = this.size * 1.5 * SCALE_FACTOR; // Fireball size relative to asteroid
+        const asteroidExplosionFireballFinalSize = this.size * 2; // Radius so the fireball reaches twice the asteroid diameter
         // Pass the asteroid's total animation duration to the fireball to ensure it lasts as long as the asteroid fades
-        fireball.reset(this.x, this.y, asteroidExplosionFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR, asteroidExplosionFireballFinalSize, 'visual', this.totalAnimationDuration);
+        fireball.reset(
+            this.x,
+            this.y,
+            asteroidExplosionFireballFinalSize * FIREBALL_INITIAL_SIZE_FACTOR,
+            asteroidExplosionFireballFinalSize,
+            'visual',
+            this.totalAnimationDuration,
+            0.85,
+            2
+        );
         activeFireballs.push(fireball);
 
         playSpatialSound(explosionBuffer, this.x, 1, finalPitch); 
@@ -3153,12 +3355,23 @@
             this.element.setAttribute('cy', -9999);
         }
 
-        reset(x, y, initialRadius, finalRadius, type = 'visual', explicitDurationMs = null) {
+        reset(
+            x,
+            y,
+            initialRadius,
+            finalRadius,
+            type = 'visual',
+            explicitDurationMs = null,
+            fadeStartProgress = 0.7,
+            fadeCurveExponent = 1
+        ) {
             this.x = x;
             this.y = y;
             this.initialRadius = initialRadius; // Initial radius of the fireball
             this.finalRadius = finalRadius; // Final radius the fireball expands to
             this.explicitDurationMs = explicitDurationMs; // Store explicit duration if provided
+            this.fadeStartProgress = Math.min(1, Math.max(0, fadeStartProgress)); // Clamp fade start within [0,1]
+            this.fadeCurveExponent = Math.max(0.01, fadeCurveExponent); // Prevent zero or negative exponent
 
             // Calculate originalDuration based on the expansion rate and total expansion amount
             // This is used if no explicitDurationMs is provided.
@@ -3212,10 +3425,12 @@
             }
 
             // Fade out towards the end
-            const fadeStartProgress = 0.7;
-            if (progress > fadeStartProgress) {
-                const fadeProgress = (progress - fadeStartProgress) / (1 - fadeStartProgress);
-                this.element.style.opacity = 1 - fadeProgress;
+            if (progress > this.fadeStartProgress) {
+                const fadeDenominator = 1 - this.fadeStartProgress;
+                let fadeProgress = fadeDenominator <= 0 ? 1 : (progress - this.fadeStartProgress) / fadeDenominator;
+                fadeProgress = Math.min(1, Math.max(0, fadeProgress));
+                const easedFade = Math.pow(fadeProgress, this.fadeCurveExponent);
+                this.element.style.opacity = 1 - easedFade;
             } else {
                 this.element.style.opacity = 1;
             }
@@ -3276,6 +3491,7 @@
         gameplayLayer.appendChild(this.healthBarGroup); // Append health bar group directly to gameplay layer
 
         this.messageGroup = null; // New: Group for UFO message (rect + text)
+        this.gradientIds = []; // Track gradient defs created for this UFO
 
         this.drawUFO(); // Initial drawing - populates this.parts and message elements
         this.drawHealthBar(); // Draw health bar (appends health bar elements to healthBarGroup)
@@ -3361,7 +3577,11 @@
         );
         const mainBody = createSVGElement('polygon');
         mainBody.setAttribute('points', mainBodyPoints);
-        mainBody.setAttribute('fill', `url(#${generateRandomUfoGradient()})`);
+        {
+          const gid = generateRandomUfoGradient();
+          this.gradientIds.push(gid);
+          mainBody.setAttribute('fill', `url(#${gid})`);
+        }
         this.element.appendChild(mainBody);
         this.parts.push(mainBody);
 
@@ -3377,7 +3597,11 @@
         );
         const cockpit = createSVGElement('polygon');
         cockpit.setAttribute('points', cockpitPoints);
-        cockpit.setAttribute('fill', `url(#${generateRandomUfoGradient()})`);
+        {
+          const gid = generateRandomUfoGradient();
+          this.gradientIds.push(gid);
+          cockpit.setAttribute('fill', `url(#${gid})`);
+        }
         this.element.appendChild(cockpit);
         this.parts.push(cockpit);
 
@@ -3397,7 +3621,11 @@
             );
             const rightWing = createSVGElement('polygon');
             rightWing.setAttribute('points', rightWingPoints);
-            rightWing.setAttribute('fill', `url(#${generateRandomUfoGradient()})`);
+            {
+              const gid = generateRandomUfoGradient();
+              this.gradientIds.push(gid);
+              rightWing.setAttribute('fill', `url(#${gid})`);
+            }
             this.element.appendChild(rightWing);
             this.parts.push(rightWing);
 
@@ -3407,7 +3635,11 @@
             );
             const leftWing = createSVGElement('polygon');
             leftWing.setAttribute('points', leftWingPoints);
-            leftWing.setAttribute('fill', `url(#${generateRandomUfoGradient()})`);
+            {
+              const gid = generateRandomUfoGradient();
+              this.gradientIds.push(gid);
+              leftWing.setAttribute('fill', `url(#${gid})`);
+            }
             this.element.appendChild(leftWing);
             this.parts.push(leftWing);
         }
@@ -3430,7 +3662,11 @@
             );
             const thruster = createSVGElement('polygon');
             thruster.setAttribute('points', thrusterPoints);
-            thruster.setAttribute('fill', `url(#${generateRandomUfoGradient()})`);
+            {
+              const gid = generateRandomUfoGradient();
+              this.gradientIds.push(gid);
+              thruster.setAttribute('fill', `url(#${gid})`);
+            }
             this.element.appendChild(thruster);
             this.parts.push(thruster);
         }
@@ -3658,6 +3894,17 @@
             }
         }
 
+        // Cleanup any gradients created for this UFO to prevent defs bloating
+        if (this.gradientIds && this.gradientIds.length) {
+            this.gradientIds.forEach(gid => {
+                const grad = document.getElementById(gid);
+                if (grad && grad.parentNode) {
+                    grad.parentNode.removeChild(grad);
+                }
+            });
+            this.gradientIds = [];
+        }
+
         // Remove health bar group from DOM
         if (this.healthBarGroup && this.healthBarGroup.parentNode) {
             this.healthBarGroup.parentNode.removeChild(this.healthBarGroup);
@@ -3798,7 +4045,8 @@
 
         // Apply styling based on quality settings
         if (settings.ufoMessageTransparency) {
-            this.messageBg.setAttribute('fill', 'rgba(20, 20, 40, 0.9)');
+            this.messageBg.setAttribute('fill', '#141428');
+            this.messageBg.setAttribute('fill-opacity', '0.9');
             this.messageText.setAttribute('fill', '#aaffaa');
             this.messageBg.setAttribute('stroke', '#66bb66');
             this.messageBg.setAttribute('stroke-width', 1);
@@ -3824,7 +4072,8 @@
                 feDropShadow.setAttribute('dx', '0');
                 feDropShadow.setAttribute('dy', '0');
                 feDropShadow.setAttribute('stdDeviation', '5'); // Blur radius
-                feDropShadow.setAttribute('flood-color', 'rgba(100, 200, 100, 0.5)'); // Shadow color
+                feDropShadow.setAttribute('flood-color', '#64C864'); // Shadow color
+                feDropShadow.setAttribute('flood-opacity', '0.5');
                 filter.appendChild(feDropShadow);
                 canvas.querySelector('defs').appendChild(filter);
             }
@@ -3835,7 +4084,15 @@
 
         this.messageGroup.style.transition = `opacity ${settings.ufoMessageTransition}`;
         this.messageGroup.style.opacity = 1; // Show message
-        speakRoboticText(message, 50 / gameSpeedMultiplier); // Play robotic voice for the message, scaled
+        // Speak message via Web Speech API (optional), fallback to robotic synth
+        if (!(isMuted || isPaused) && ttsEnabled && ('speechSynthesis' in window)) {
+            const ok = speakUfoTextWithTTS(message);
+            if (!ok) {
+                speakRoboticText(message, 50 / gameSpeedMultiplier);
+            }
+        } else {
+            speakRoboticText(message, 50 / gameSpeedMultiplier);
+        }
 
         setTimeout(() => {
           this.messageGroup.style.opacity = 0; // Fade out after 0.5 seconds
@@ -3922,6 +4179,27 @@
         }
     }
 
+    function enforceParticleBudget(reserveSlots = 0) {
+      const desiredReserve = Math.max(0, Math.ceil(reserveSlots));
+      const allowedCount = Math.max(0, MAX_ACTIVE_PARTICLES - desiredReserve);
+      if (activeParticles.length <= allowedCount) {
+        return;
+      }
+      const overflow = activeParticles.length - allowedCount;
+      const buffer = Math.ceil(MAX_ACTIVE_PARTICLES * PARTICLE_OVERFLOW_HEADROOM_RATIO);
+      const removeCount = Math.min(activeParticles.length, overflow + buffer);
+      if (removeCount <= 0) {
+        return;
+      }
+      for (let i = 0; i < removeCount; i++) {
+        const particle = activeParticles[i];
+        if (particle) {
+          particle.remove();
+        }
+      }
+      activeParticles.splice(0, removeCount);
+    }
+
     /**
      * Creates explosion or spark particles for visual effect.
      * @param {number} x - X coordinate of explosion/sparks.
@@ -3943,26 +4221,46 @@
         numParticles = settings.asteroidNumParticles;
         particleSizeMin = baseSize * 0.05 * SCALE_FACTOR; // Reduced min size
         particleSizeMax = baseSize * 0.1 * SCALE_FACTOR; // Reduced max size
-        particleSpeedMin = 3 / TARGET_FRAME_DURATION; // Increased speed
-        particleSpeedMax = 8 / TARGET_FRAME_DURATION; // Increased speed
-        particleLife = 40 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Increased life to ~0.66 seconds, scaled
+        particleSpeedMin = 1.5 / TARGET_FRAME_DURATION; // Reduced speed to keep debris closer
+        particleSpeedMax = 4 / TARGET_FRAME_DURATION; // Reduced speed to keep debris closer
+        particleLife = 35 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Faster fade for explosion debris
       } else if (type === 'spark') {
         numParticles = settings.sparkNumParticles;
         particleSizeMin = baseSize * 0.02 * SCALE_FACTOR; // Reduced min size
         particleSizeMax = baseSize * 0.07 * SCALE_FACTOR; // Reduced max size
-        particleSpeedMin = 1.5 / TARGET_FRAME_DURATION; // Reverted speed
-        particleSpeedMax = 4 / TARGET_FRAME_DURATION; // Reverted speed
-        particleLife = 30 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Reverted life to 0.5 seconds, scaled
+        particleSpeedMin = 0.75 / TARGET_FRAME_DURATION; // Reduced speed
+        particleSpeedMax = 2 / TARGET_FRAME_DURATION; // Reduced speed
+        particleLife = 25 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Faster spark fade
       } else if (type === 'nukeFireball') { // New: Nuke explosion particles
         numParticles = 30; // Further reduced number of particles for nuke explosion
         particleSizeMin = baseSize * 0.03 * SCALE_FACTOR; // Reduced min size
         particleSizeMax = baseSize * 0.07 * SCALE_FACTOR; // Reduced max size
-        particleSpeedMin = 0.5 / TARGET_FRAME_DURATION; // Slower, lingering particles
-        particleSpeedMax = 2 / TARGET_FRAME_DURATION;
-        particleLife = 90 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Reduced life for fireball effect (1.5 seconds), scaled
+        particleSpeedMin = 0.3 / TARGET_FRAME_DURATION; // Reduced outward drift
+        particleSpeedMax = 1.2 / TARGET_FRAME_DURATION;
+        particleLife = 70 * TARGET_FRAME_DURATION / gameSpeedMultiplier; // Faster nuke haze fade
       }
 
-      for (let i = 0; i < numParticles; i++) {
+      let spawnCount = numParticles;
+      if (type === 'explosion') {
+        const sizeScale = Math.max(0.5, Math.min(4, baseSize / (45 * SCALE_FACTOR)));
+        spawnCount = Math.ceil(spawnCount * sizeScale * 0.8);
+      } else if (type === 'spark') {
+        spawnCount = Math.ceil(spawnCount * 0.8);
+      } else if (type === 'nukeFireball') {
+        spawnCount = Math.ceil(spawnCount * 1.2);
+      }
+      spawnCount = Math.max(1, spawnCount);
+
+      enforceParticleBudget(spawnCount);
+
+      const currentActiveParticles = activeParticles.length;
+      const availableCapacity = Math.max(0, MAX_ACTIVE_PARTICLES - currentActiveParticles);
+      if (availableCapacity <= 0) {
+        return;
+      }
+      spawnCount = Math.min(spawnCount, availableCapacity);
+
+      for (let i = 0; i < spawnCount; i++) {
         let particleElement = particlePool.pop();
         if (!particleElement) {
             particleElement = createSVGElement('circle');
@@ -4008,9 +4306,40 @@
         // Add to global activeParticles array for centralized animation
         activeParticles.push(new Particle(particleElement, x, y, vx, vy, particleLife, particleLife));
       }
+      enforceParticleBudget();
     }
 
-    // --- Initialization Functions ---
+  // --- Initialization Functions ---
+
+    function clearChildren(node) {
+      while (node && node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    // Rebuild tiled clones so that stars cover the viewport during group translation
+    function rebuildStarClones() {
+      if (!starsLayer || !starsLayerLeft || !starsLayerUp || !starsLayerUpLeft) return;
+      // Clear previous clones
+      clearChildren(starsLayerLeft);
+      clearChildren(starsLayerUp);
+      clearChildren(starsLayerUpLeft);
+
+      // Clone base stars into tile groups
+      const baseChildren = Array.from(starsLayer.children);
+      for (let i = 0; i < baseChildren.length; i++) {
+        const base = baseChildren[i];
+        const a = base.cloneNode(false);
+        const b = base.cloneNode(false);
+        const c = base.cloneNode(false);
+        starsLayerLeft.appendChild(a);
+        starsLayerUp.appendChild(b);
+        starsLayerUpLeft.appendChild(c);
+      }
+
+      // Update clone transforms to current width/height
+      starsLayerLeft.setAttribute('transform', `translate(${-width}, 0)`);
+      starsLayerUp.setAttribute('transform', `translate(0, ${-height})`);
+      starsLayerUpLeft.setAttribute('transform', `translate(${-width}, ${-height})`);
+    }
 
     function initStars() {
       const settings = qualitySettings[currentQualityLevel];
@@ -4031,6 +4360,16 @@
 
       // Update color for all existing stars based on current quality settings
       stars.forEach(star => star.updateColor());
+
+      // Reset scroll offsets
+      starfieldOffsetX = 0;
+      starfieldOffsetY = 0;
+      if (starsScrollGroup) {
+        starsScrollGroup.setAttribute('transform', `translate(0, 0)`);
+      }
+
+      // Rebuild tiled clones so the starfield covers the viewport for any offset
+      rebuildStarClones();
 
       // Initialize starfield direction
       setNewStarfieldTargetDirection(); // Sets targetVx/Vy and starfieldDirectionTransitionStartTime
@@ -4161,10 +4500,48 @@
         fps = frameCount; // Number of frames in the last second
         frameCount = 0; // Reset frame count for the next second
         lastFpsUpdateTime = time; // Reset the time for the next FPS calculation period
+
+        // Auto-quality management based on sustained FPS
+        if (qualityMode === 'auto') {
+          const nowMs = Date.now();
+          if (fps < AUTO_LOW_THRESHOLD_FPS) {
+            autoLowStreak++;
+            autoHighStreak = 0;
+            if (autoLowStreak >= AUTO_LOW_STREAK_SECONDS && (nowMs - autoLastAdjustTime) >= AUTO_ADJUST_MIN_INTERVAL_MS) {
+              if (currentQualityLevel === 'high') {
+                setQualityLevel('medium');
+                autoLastAdjustTime = nowMs;
+                autoLowStreak = 0;
+              } else if (currentQualityLevel === 'medium') {
+                setQualityLevel('low');
+                autoLastAdjustTime = nowMs;
+                autoLowStreak = 0;
+              }
+            }
+          } else if (fps >= AUTO_HIGH_THRESHOLD_FPS) {
+            autoHighStreak++;
+            autoLowStreak = 0;
+            if (autoHighStreak >= AUTO_HIGH_STREAK_SECONDS && (nowMs - autoLastAdjustTime) >= AUTO_ADJUST_MIN_INTERVAL_MS) {
+              if (currentQualityLevel === 'low') {
+                setQualityLevel('medium');
+                autoLastAdjustTime = nowMs;
+                autoHighStreak = 0;
+              } else if (currentQualityLevel === 'medium') {
+                setQualityLevel('high');
+                autoLastAdjustTime = nowMs;
+                autoHighStreak = 0;
+              }
+            }
+          } else {
+            autoLowStreak = 0;
+            autoHighStreak = 0;
+          }
+        }
       }
 
       const now = Date.now();
-      const frameStart = performance.now(); // Start measuring total frame time for this frame
+      const shouldMeasure = isPerfStatsVisible; // Only measure when stats are visible
+      const frameStart = shouldMeasure ? performance.now() : 0; // Start measuring total frame time for this frame
 
       // If paused, only update FPS and stats, then request next frame and return
       if (isPaused) {
@@ -4187,10 +4564,24 @@
       starfieldVx = starfieldVx + (starfieldTargetVx - starfieldVx) * transitionProgress;
       starfieldVy = starfieldVy + (starfieldTargetVy - starfieldVy) * transitionProgress;
 
-      // Update stars
-      let sectionStart = performance.now();
-      stars.forEach(star => star.update(scaledDeltaTime)); // Pass scaledDeltaTime
-      accumulatedPerformanceData.stars += (performance.now() - sectionStart);
+      // Update stars via group translation (significantly fewer DOM writes)
+      let sectionStart; if (shouldMeasure) sectionStart = performance.now();
+      starfieldOffsetX += starfieldVx * scaledDeltaTime;
+      starfieldOffsetY += starfieldVy * scaledDeltaTime;
+
+      // Keep offsets within a tile and translate the scroll group
+      // Using modulo to avoid unbounded values and rely on tiling for coverage
+      if (width > 0) {
+        starfieldOffsetX = ((starfieldOffsetX % width) + width) % width;
+      }
+      if (height > 0) {
+        starfieldOffsetY = ((starfieldOffsetY % height) + height) % height;
+      }
+
+      if (starsScrollGroup) {
+        starsScrollGroup.setAttribute('transform', `translate(${starfieldOffsetX}, ${starfieldOffsetY})`);
+      }
+      if (shouldMeasure) accumulatedPerformanceData.stars += (performance.now() - sectionStart);
 
       // Update date/time display position ONLY if it's visible
       if (isDateTimeVisible) {
@@ -4242,12 +4633,12 @@
       }
 
       // Update defenders
-      sectionStart = performance.now();
+      if (shouldMeasure) sectionStart = performance.now();
       defenders.forEach(defender => defender.update(scaledDeltaTime)); // Pass scaledDeltaTime, renamed from satellites
-      accumulatedPerformanceData.defenders += (performance.now() - sectionStart);
+      if (shouldMeasure) accumulatedPerformanceData.defenders += (performance.now() - sectionStart);
 
       // Update asteroids and check for removal
-      sectionStart = performance.now();
+      if (shouldMeasure) sectionStart = performance.now();
       for (let i = asteroids.length - 1; i >= 0; i--) {
         const asteroid = asteroids[i];
         // If asteroid.update() returns true, it means it went off-screen horizontally and needs removal.
@@ -4264,7 +4655,7 @@
             asteroids.splice(i, 1); // Remove from array
         }
       }
-      accumulatedPerformanceData.asteroids += (performance.now() - sectionStart);
+      if (shouldMeasure) accumulatedPerformanceData.asteroids += (performance.now() - sectionStart);
 
       // Maintain the number of asteroids (spawn off-screen if needed)
       while (asteroids.length < numInitialAsteroids) {
@@ -4272,14 +4663,14 @@
       }
 
       // Update UFOs
-      sectionStart = performance.now();
+      if (shouldMeasure) sectionStart = performance.now();
       for (let i = ufos.length - 1; i >= 0; i--) {
         ufos[i].update(scaledDeltaTime); // Pass scaledDeltaTime
       }
-      accumulatedPerformanceData.ufo += (performance.now() - sectionStart);
+      if (shouldMeasure) accumulatedPerformanceData.ufo += (performance.now() - sectionStart);
 
       // Update lasers and check for removal
-      sectionStart = performance.now();
+      if (shouldMeasure) sectionStart = performance.now();
       for (let i = lasers.length - 1; i >= 0; i--) {
         const laser = lasers[i];
         
@@ -4290,10 +4681,10 @@
           lasers.splice(i, 1);
         }
       }
-      accumulatedPerformanceData.lasers += (performance.now() - sectionStart);
+      if (shouldMeasure) accumulatedPerformanceData.lasers += (performance.now() - sectionStart);
 
       // Update nukes and check for removal
-      sectionStart = performance.now();
+      if (shouldMeasure) sectionStart = performance.now();
       for (let i = nukes.length - 1; i >= 0; i--) {
           const nuke = nukes[i];
           if (nuke.update(scaledDeltaTime)) { // If update returns true, nuke's life is up
@@ -4301,10 +4692,10 @@
               nukes.splice(i, 1);
           }
       }
-      accumulatedPerformanceData.nukes += (performance.now() - sectionStart);
+      if (shouldMeasure) accumulatedPerformanceData.nukes += (performance.now() - sectionStart);
 
       // Update fireballs and check for removal
-      sectionStart = performance.now();
+      if (shouldMeasure) sectionStart = performance.now();
       for (let i = activeFireballs.length - 1; i >= 0; i--) {
           const fireball = activeFireballs[i];
           if (fireball.update()) { // If fireball is dead
@@ -4312,10 +4703,10 @@
               activeFireballs.splice(i, 1);
           }
       }
-      accumulatedPerformanceData.fireballs += (performance.now() - sectionStart);
+      if (shouldMeasure) accumulatedPerformanceData.fireballs += (performance.now() - sectionStart);
 
       // Update particles (centralized animation)
-      sectionStart = performance.now();
+      if (shouldMeasure) sectionStart = performance.now();
       for (let i = activeParticles.length - 1; i >= 0; i--) {
           const particle = activeParticles[i];
           if (particle.update(scaledDeltaTime)) { // If particle is dead
@@ -4323,15 +4714,15 @@
               activeParticles.splice(i, 1);
           }
       }
-      accumulatedPerformanceData.particles += (performance.now() - sectionStart);
+      if (shouldMeasure) accumulatedPerformanceData.particles += (performance.now() - sectionStart);
 
       // New: Aggregate particles
-      sectionStart = performance.now();
+      if (shouldMeasure) sectionStart = performance.now();
       aggregateParticles();
-      accumulatedPerformanceData.particles += (performance.now() - sectionStart); // Add aggregation time to particles category
+      if (shouldMeasure) accumulatedPerformanceData.particles += (performance.now() - sectionStart); // Add aggregation time to particles category
 
       // Update exploding UFO parts (centralized animation)
-      sectionStart = performance.now();
+      if (shouldMeasure) sectionStart = performance.now();
       for (let i = explodingUfoParts.length - 1; i >= 0; i--) {
           const part = explodingUfoParts[i];
           if (part.update(scaledDeltaTime)) { // If part is dead
@@ -4339,7 +4730,7 @@
               explodingUfoParts.splice(i, 1);
           }
       }
-      accumulatedPerformanceData.explodingUfoParts += (performance.now() - sectionStart);
+      if (shouldMeasure) accumulatedPerformanceData.explodingUfoParts += (performance.now() - sectionStart);
 
       // Spawn new asteroids (off-screen)
       if (Date.now() - lastAsteroidSpawnTime > asteroidSpawnInterval / gameSpeedMultiplier) { // Scale interval
@@ -4406,9 +4797,11 @@
       //     nukeButton.disabled = false;
       // }
 
-      // Accumulate overall update time for this frame
-      accumulatedPerformanceData.overallUpdateTime += (performance.now() - frameStart);
-      frameCounterForPerf++;
+      // Accumulate overall update time for this frame (only when measuring)
+      if (shouldMeasure) {
+        accumulatedPerformanceData.overallUpdateTime += (performance.now() - frameStart);
+        frameCounterForPerf++;
+      }
 
       // Update and display performance stats periodically
       if (isPerfStatsVisible && now - lastPerfStatsUpdateTime >= PERF_UPDATE_INTERVAL) {
@@ -4479,6 +4872,17 @@
       width = window.innerWidth;
       height = window.innerHeight;
       canvas.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      // Reset starfield translation on resize to avoid large offsets after dimension change
+      starfieldOffsetX = 0;
+      starfieldOffsetY = 0;
+      if (starsScrollGroup) {
+        starsScrollGroup.setAttribute('transform', `translate(0, 0)`);
+      }
+      if (starsLayerLeft && starsLayerUp && starsLayerUpLeft) {
+        starsLayerLeft.setAttribute('transform', `translate(${-width}, 0)`);
+        starsLayerUp.setAttribute('transform', `translate(0, ${-height})`);
+        starsLayerUpLeft.setAttribute('transform', `translate(${-width}, ${-height})`);
+      }
       // Reset orbit center to the new screen center on resize
       dateTimeOrbitCenterX = width / 2;
       dateTimeOrbitCenterY = height / 2;
@@ -4557,10 +4961,28 @@
 
     // Existing button event listeners (now inside the menu or bottom controls)
     qualityToggleBtn.addEventListener('click', cycleQuality);
+    qualityModeToggleBtn.addEventListener('click', toggleQualityMode);
     muteToggleBtn.addEventListener('click', toggleMute);
     pauseToggleBtn.addEventListener('click', togglePause);
     dateTimeToggleBtn.addEventListener('click', toggleDateTimeDisplay);
     perfStatsToggleBtn.addEventListener('click', togglePerfStatsDisplay);
+    if (ttsToggleBtn) {
+        ttsToggleBtn.addEventListener('click', () => {
+            ttsEnabled = !ttsEnabled;
+            ttsToggleBtn.textContent = `TTS: ${ttsEnabled ? 'On' : 'Off'}`;
+            if (!ttsEnabled && 'speechSynthesis' in window) { window.speechSynthesis.cancel(); }
+        });
+    }
+    if (ttsVoiceSelect) {
+        ttsVoiceSelect.addEventListener('change', (e) => {
+            const uri = e.target.value;
+            selectedVoiceURI = uri;
+            if (ttsVoices && ttsVoices.length) {
+                const found = ttsVoices.find(v => v.voiceURI === uri);
+                ttsVoice = found || ttsVoice;
+            }
+        });
+    }
 
     speedSlider.addEventListener('input', (event) => {
         const sliderValue = parseInt(event.target.value);
@@ -4577,6 +4999,55 @@
             defender.thrustOffDuration = 1000 * SCALE_FACTOR / gameSpeedMultiplier;
         });
     });
+
+    // Initialize auto-quality sliders to current values and add listeners
+    if (autoLowFpsSlider) {
+        autoLowFpsSlider.value = AUTO_LOW_THRESHOLD_FPS;
+        autoLowFpsValue.textContent = `${AUTO_LOW_THRESHOLD_FPS}`;
+        autoLowFpsSlider.addEventListener('input', (e) => {
+            AUTO_LOW_THRESHOLD_FPS = parseInt(e.target.value, 10);
+            autoLowFpsValue.textContent = `${AUTO_LOW_THRESHOLD_FPS}`;
+        });
+    }
+    if (autoLowStreakSlider) {
+        autoLowStreakSlider.value = AUTO_LOW_STREAK_SECONDS;
+        autoLowStreakValue.textContent = `${AUTO_LOW_STREAK_SECONDS}s`;
+        autoLowStreakSlider.addEventListener('input', (e) => {
+            AUTO_LOW_STREAK_SECONDS = parseInt(e.target.value, 10);
+            autoLowStreakValue.textContent = `${AUTO_LOW_STREAK_SECONDS}s`;
+        });
+    }
+    if (autoHighFpsSlider) {
+        autoHighFpsSlider.value = AUTO_HIGH_THRESHOLD_FPS;
+        autoHighFpsValue.textContent = `${AUTO_HIGH_THRESHOLD_FPS}`;
+        autoHighFpsSlider.addEventListener('input', (e) => {
+            AUTO_HIGH_THRESHOLD_FPS = parseInt(e.target.value, 10);
+            autoHighFpsValue.textContent = `${AUTO_HIGH_THRESHOLD_FPS}`;
+        });
+    }
+    if (autoHighStreakSlider) {
+        autoHighStreakSlider.value = AUTO_HIGH_STREAK_SECONDS;
+        autoHighStreakValue.textContent = `${AUTO_HIGH_STREAK_SECONDS}s`;
+        autoHighStreakSlider.addEventListener('input', (e) => {
+            AUTO_HIGH_STREAK_SECONDS = parseInt(e.target.value, 10);
+            autoHighStreakValue.textContent = `${AUTO_HIGH_STREAK_SECONDS}s`;
+        });
+    }
+
+    // Initialize quality button labels
+    updateQualityButtonText();
+    updateQualityModeButtonText();
+    // Initialize TTS voice list once available
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            populateTtsVoiceList();
+        };
+        // Try initial load as well (may be empty at first call)
+        populateTtsVoiceList();
+    } else if (ttsVoicesStatus) {
+        ttsVoicesStatus.textContent = '0';
+        if (ttsVoiceSelect) ttsVoiceSelect.disabled = true;
+    }
 
     nukeButton.addEventListener('click', async (event) => { // Made async to await audio context resume
         // Don't fire if paused, not available, or one is already active
@@ -4621,7 +5092,8 @@
       // Set the global game start time as early as possible
       gameStartTime = Date.now();
 
-      getAudioContext(); // This will create and attempt to resume the context
+      // Create AudioContext (suspended is fine); resume happens on first user gesture
+      getAudioContext();
 
       // Generate sound data URIs and decode into AudioBuffers
       const decodeAudio = async (dataUri) => {
@@ -4672,10 +5144,34 @@
       } catch (e) { console.error("Failed to load aggregationSoundBuffer:", e); }
 
       // Get references to the pre-defined SVG layers
-      starsLayer = document.getElementById('starsLayer');
+      const baseStarsLayer = document.getElementById('starsLayer');
       gameplayLayer = document.getElementById('gameplayLayer');
       effectsLayer = document.getElementById('effectsLayer');
       nukeFlashLayer = document.getElementById('nukeFlashLayer'); // New: Get reference to the nuke flash layer
+
+      // Create a scroll group for stars and tile clones for seamless scrolling
+      if (!starsScrollGroup) {
+        starsScrollGroup = createSVGElement('g');
+        starsScrollGroup.setAttribute('id', 'starsScrollGroup');
+        // Insert scroll group in place of baseStarsLayer
+        const svgRoot = baseStarsLayer.parentNode;
+        svgRoot.insertBefore(starsScrollGroup, baseStarsLayer);
+        // Move the base layer inside the scroll group and keep reference
+        starsLayer = baseStarsLayer;
+        starsScrollGroup.appendChild(starsLayer);
+        // Create tiled clones containers
+        starsLayerLeft = createSVGElement('g');
+        starsLayerUp = createSVGElement('g');
+        starsLayerUpLeft = createSVGElement('g');
+        starsScrollGroup.appendChild(starsLayerLeft);
+        starsScrollGroup.appendChild(starsLayerUp);
+        starsScrollGroup.appendChild(starsLayerUpLeft);
+      }
+
+      // Initialize tiling transforms for clones
+      starsLayerLeft.setAttribute('transform', `translate(${-width}, 0)`);
+      starsLayerUp.setAttribute('transform', `translate(0, ${-height})`);
+      starsLayerUpLeft.setAttribute('transform', `translate(${-width}, ${-height})`);
 
       // Pre-populate object pools
       for (let i = 0; i < MAX_LASERS; i++) {
